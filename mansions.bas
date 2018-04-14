@@ -1,0 +1,628 @@
+DECLARE SUB END.GAME ()
+DECLARE SUB INITIALIZE ()
+DECLARE SUB LOAD.A.GAME ()
+DECLARE SUB LOADFILE (FILENAME$, LENTH&, SEGMENT!, OFFSET!, FLAG%)
+DECLARE SUB MENU ()
+DECLARE SUB NEW.LEVEL (LEVEL%)
+DECLARE SUB SAVE.THIS.GAME ()
+DECLARE SUB START.NEW.GAME ()
+DEFINT A-Z
+COMMON SHARED MAPX%, MAPY%, X%, Y%, DIRECTION%, KEYB%, NOW.SHOOTING%, COUNTER%
+COMMON SHARED ITEM&, DISTANCE%, NOTUP%, NOTDOWN%, NOTLEFT%, NOTRIGHT%, GO%
+COMMON SHARED SHOOT.VECTOR%, SHOTX%, SHOTY%, BAD.HEALTH%, BAD.RIGHT%, BAD.LEFT%
+COMMON SHARED BAD.UP%, BAD.DOWN%, WHATS.AHEAD%
+COMMON SHARED INFO.KEY%, INFO.COIN%, INFO.HEALTH%, INFO.SHIELD%, INFO.TIME%, INFO.GUN%
+COMMON SHARED INFO.TRAP%, INFO.DISK%, SHOOT.COUNTER%, GET.ME%, OUCH%, OUCH.COUNT%
+COMMON SHARED RETRY.KEY%, RETRY.COIN%, RETRY.SCORE%, RETRY.SHIELD%
+COMMON SHARED RETRY.HEALTH%, RETRY.GUN%, RETRY.DISK%, RETRY.TIME%
+COMMON SHARED LEVEL%
+COMMON SHARED ABORT%, GAME.OPEN%
+CLEAR
+DIM SHARED CHART&(0 TO 20, 0 TO 23)
+DIM SHARED IMAGE&(0 TO 4160)
+DIM SHARED COLORS&(0 TO 51)
+INITIALIZE
+IF ABORT% THEN SYSTEM
+MENU
+SCREEN 0
+WIDTH 80, 25
+CLEAR
+SYSTEM
+UNEXPECTED.ERROR:
+IF ERR THEN BAD.ERROR% = ERR: RESUME UNEXPECTED.ERROR
+SCREEN 0
+WIDTH 80, 25
+PRINT "A MAJOR ERROR HAS CAUSED THIS PROGRAM TO TERMINATE!"
+PRINT "ERROR NUMBER:  "; BAD.ERROR%; ".  INFORM THE PROGRAMMER OF THIS NUMBER"
+SYSTEM
+MISSING.FILE:
+ABORT% = 1
+RESUME NEXT
+GRAPHICS.ERROR:
+IF ERR THEN RESUME GRAPHICS.ERROR
+SYSTEM
+
+SUB END.GAME
+    MAPX% = 0: MAPY% = 0: X% = 0: Y% = 0: DIRECTION% = 0: KEYB% = 0: NOW.SHOOTING% = 0
+    COUNTER% = 0: ITEM& = 0: DISTANCE% = 0: NOTUP% = 0: NOTDOWN% = 0: NOTLEFT% = 0
+    NOTRIGHT% = 0: GO% = 0: SHOOT.VECTOR% = 0: SHOTX% = 0: SHOTY% = 0
+    BAD.HEALTH% = 0: BAD.RIGHT% = 0: BAD.LEFT% = 0: BAD.UP% = 0: BAD.DOWN% = 0: WHATS.AHEAD% = 0
+    INFO.KEY% = 0: INFO.COIN% = 0: INFO.HEALTH% = 0: INFO.SHIELD% = 0: INFO.TIME% = 0: INFO.GUN% = 0
+    INFO.TRAP% = 0: INFO.DISK% = 0: SHOOT.COUNTER% = 0: GET.ME% = 0: OUCH% = 0: OUCH.COUNT% = 0
+    RETRY.KEY% = 0: RETRY.COIN% = 0: RETRY.SCORE% = 0: RETRY.SHIELD% = 0
+    RETRY.HEALTH% = 0: RETRY.GUN% = 0: RETRY.DISK% = 0: RETRY.TIME% = 0
+    LEVEL% = 0
+    GAME.OPEN% = 0
+    DEF SEG = VARSEG(CHART&(0, 0))
+    FOR NULL% = 0 TO VARPTR(CHART&(20, 23))
+        POKE NULL%, 0
+    NEXT NULL%
+END SUB
+
+SUB INITIALIZE
+    ABORT% = 0
+    DO: LOOP UNTIL INKEY$ = ""
+    CLS
+    PRINT "LOADING..."
+    LOADFILE "images.0", 12008, VARSEG(IMAGE&(0)), 0, 3
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "pal.0", 212, VARSEG(COLORS&(0)), 0, 3
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "menu.0", 64008, &HA000, 0, 3
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "loadmenu.0", 30008, &HA000, 0, 2
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "savemenu.0", 30008, &HA000, 0, 2
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "message.1", 15008, &HA000, 0, 2
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "message.2", 15008, &HA000, 0, 2
+    IF ABORT% = 1 THEN EXIT SUB
+    LOADFILE "message.3", 15008, &HA000, 0, 2
+    IF ABORT% = 1 THEN EXIT SUB
+    ON ERROR GOTO GRAPHICS.ERROR
+    SCREEN 13
+    FOR COLORSET% = 0 TO 50
+        PALETTE COLORSET%, COLORS&(COLORSET%)
+    NEXT COLORSET%
+    ON ERROR GOTO UNEXPECTED.ERROR
+END SUB
+
+SUB LOAD.A.GAME
+    SELECT.GAME:
+    CLS
+    LOADFILE "loadmenu.0", 30008, &HA000, 19200, 1
+    IF ABORT% = 1 THEN EXIT SUB
+    DO
+        DO
+            KEYB$ = INKEY$
+        LOOP UNTIL KEYB$ <> ""
+    LOOP UNTIL (ASC(KEYB$) < 58 AND ASC(KEYB$) > 48) OR KEYB$ = CHR$(27)
+    IF KEYB$ = CHR$(27) THEN EXIT SUB
+    FILENAME$ = "saved." + KEYB$
+    LOADFILE FILENAME$, 2020, VARSEG(CHART&(0, 0)), 0, 1
+    IF ABORT% = 1 THEN
+        ABORT% = 0
+        CLS
+        LOADFILE "message.1", 15008, &HA000, 19200, 1
+        IF ABORT% = 1 THEN EXIT SUB
+        DO: LOOP UNTIL INKEY$ = ""
+        DO: LOOP UNTIL INKEY$ <> ""
+        GOTO SELECT.GAME
+    END IF
+    BAD.LEFT% = CHART&(0, 22): BAD.RIGHT% = CHART&(1, 22): BAD.UP% = CHART&(2, 22)
+    BAD.DOWN% = CHART&(3, 22): BADX% = CHART&(4, 22): BADY% = CHART&(5, 22)
+    BAD.HEALTH% = CHART&(6, 22): COUNTER% = CHART&(7, 22): DIRECTION% = CHART&(8, 22)
+    ERASE.FLAG% = CHART&(9, 22): GO% = CHART&(10, 22): GET.ME% = CHART&(11, 22)
+    ITEM& = CHART&(12, 22): INFO.KEY% = CHART&(13, 22): INFO.COIN% = CHART&(14, 22)
+    INFO.HEALTH% = CHART&(15, 22): INFO.SHIELD% = CHART&(16, 22): INFO.TIME% = CHART&(17, 22)
+    INFO.GUN% = CHART&(18, 22): INFO.TRAP% = CHART&(19, 22): INFO.DISK% = CHART&(20, 22)
+    KEYB% = CHART&(0, 23): LEVEL% = CHART&(1, 23): MAPX% = CHART&(2, 23)
+    MAPY% = CHART&(3, 23): NOW.SHOOTING% = CHART&(4, 23): NOTUP% = CHART&(5, 23)
+    NOTDOWN% = CHART&(6, 23): NOTLEFT% = CHART&(7, 23): NOTRIGHT% = CHART&(8, 23)
+    OUCH% = CHART&(9, 23): OUCH.COUNT% = CHART&(10, 23): SHOOT.VECTOR% = CHART&(11, 23)
+    SHOTX% = CHART&(12, 23): SHOTY% = CHART&(13, 23): SHOOT.COUNTER% = CHART&(14, 23)
+    WHATS.AHEAD% = CHART&(15, 23): X% = CHART&(16, 23): Y% = CHART&(17, 23)
+    SCORE% = CHART&(18, 23)
+    RETRY.KEY% = CHART&(1, 0): RETRY.COIN% = CHART&(2, 0)
+    RETRY.SCORE% = CHART&(3, 0): RETRY.SHIELD% = CHART&(4, 0)
+    RETRY.HEALTH% = CHART&(5, 0): RETRY.GUN% = CHART&(6, 0)
+    RETRY.DISK% = CHART&(7, 0): RETRY.TIME% = CHART&(8, 0)
+    GAME.OPEN% = 1
+    START.NEW.GAME
+END SUB
+
+SUB LOADFILE (FILENAME$, LENGTH&, SEGMENT!, OFFSET!, FLAG%)
+    ABORT% = 0
+    ON ERROR GOTO MISSING.FILE
+    CLOSE #1
+    OPEN FILENAME$ FOR INPUT AS #1
+    CLOSE #1
+    IF ABORT% = 1 THEN
+        IF (FLAG% AND 2) THEN
+            SCREEN 0
+            WIDTH 80, 25
+            PRINT "FILE " + FILENAME$ + " IS MISSING!"
+        END IF
+        EXIT SUB
+    END IF
+    CLOSE #1
+    OPEN FILENAME$ FOR APPEND AS #1
+    IF SEEK(1) <> LENGTH& THEN PROBLEM% = 1
+    CLOSE #1
+    IF PROBLEM% THEN
+        IF (FLAG% AND 2) THEN
+            SCREEN 0
+            WIDTH 80, 25
+            PRINT "FILE " + FILENAME$ + " HAS WRONG LENTH!"
+        END IF
+        ABORT% = 1
+        EXIT SUB
+    END IF
+    CLOSE #1
+    IF (FLAG% AND 1) = 0 THEN EXIT SUB
+    DEF SEG = SEGMENT!
+    BLOAD FILENAME$, OFFSET!
+    IF PROBLEM% THEN
+        IF (FLAG% AND 2) THEN
+            SCREEN 0
+            WIDTH 80, 25
+            PRINT "FILE " + FILENAME$ + " IS CORRUPT!"
+        END IF
+        ABORT% = 1
+        EXIT SUB
+    END IF
+END SUB
+
+SUB MENU
+    STATIC LOCATION%
+    MOVECURSOR% = 1
+    LOAD.MENU:
+    DEF SEG = &HA000
+    BLOAD "menu.0", 0
+    DO: DO: LOOP UNTIL INKEY$ = "": LOOP UNTIL INP(96) <> 28 AND INP(96) <> 1
+    MENU.LOOP:
+    SLOCATION% = LOCATION%
+    KEYB$ = INKEY$
+    IF KEYB$ = CHR$(0) + "H" AND LOCATION% > 0 THEN
+        LOCATION% = LOCATION% - 1
+        MOVECURSOR% = 1
+    END IF
+    IF KEYB$ = CHR$(0) + "P" AND LOCATION% < 4 THEN
+        LOCATION% = LOCATION% + 1
+        MOVECURSOR% = 1
+    END IF
+    IF GAME.OPEN% = 1 AND KEYB$ = CHR$(27) THEN KEYB$ = CHR$(13): LOCATION% = 0
+    IF KEYB$ = CHR$(13) OR KEYB$ = CHR$(32) THEN: GOTO SELECT.AN.OPTION
+    IF MOVECURSOR% = 1 THEN
+        LINE (60, (SLOCATION% * 40) + 6)-(245, (SLOCATION% * 40) + 34), 0, B
+        LINE (60, (LOCATION% * 40) + 6)-(245, (LOCATION% * 40) + 34), 7, B
+        MOVECURSOR% = 0
+    END IF
+    GOTO MENU.LOOP
+    SELECT.AN.OPTION:
+    IF LOCATION% = 0 THEN START.NEW.GAME
+    IF LOCATION% = 1 THEN LOAD.A.GAME
+    IF LOCATION% = 2 THEN SAVE.THIS.GAME
+    IF LOCATION% = 3 THEN END.GAME
+    IF LOCATION% = 4 THEN EXIT SUB
+    IF ABORT% = 1 THEN EXIT SUB
+    MOVECURSOR% = 1
+    GOTO LOAD.MENU
+END SUB
+
+DEFSNG A-Z
+SUB NEW.LEVEL (LEVEL%)
+    STATIC SLEVEL%
+    ABORT% = 0
+    FILENAME$ = "level." + LTRIM$(RTRIM$(STR$(LEVEL%)))
+    LOADFILE FILENAME$, 1852, VARSEG(CHART&(0, 0)), 0, 3
+    IF SLEVEL% < LEVEL% THEN
+        RETRY.KEY% = INFO.KEY%: RETRY.COIN% = INFO.COIN%
+        RETRY.SCORE% = INFO.SCORE%: RETRY.SHIELD% = INFO.SHIELD%
+        RETRY.HEALTH% = INFO.HEALTH%: RETRY.GUN% = INFO.GUN%
+        RETRY.DISK% = INFO.DISK%: RETRY.TIME% = INFO.TIME%
+    ELSE
+        INFO.KEY% = RETRY.KEY: INFO.COIN% = RETRY.COIN%
+        INFO.SCORE% = RETRY.SCORE%: INFO.SHIELD% = RETRY.SHIELD%
+        INFO.HEALTH% = RETRY.HEALTH%: INFO.GUN% = INFO.GUN%
+        INFO.DISK% = RETRY.DISK%: INFO.TIME% = RETRY.TIME%
+    END IF
+    ON ERROR GOTO UNEXPECTED.ERROR
+    SLEVEL% = LEVEL%
+END SUB
+
+DEFINT A-Z
+SUB SAVE.THIS.GAME
+    IF GAME.OPEN% = 0 THEN
+        CLS
+        LOADFILE "message.3", 15008, &HA000, 19200, 1
+        DO: LOOP UNTIL INKEY$ = ""
+        DO: LOOP UNTIL INKEY$ <> ""
+        EXIT SUB
+    END IF
+    GET.SAVE.NAME:
+    CLS
+    LOADFILE "savemenu.0", 30008, &HA000, 19200, 1
+    DO
+        KEYB$ = INKEY$
+    LOOP UNTIL (KEYB$ < CHR$(58) AND KEYB$ > CHR$(48)) OR KEYB$ = CHR$(27)
+    IF KEYB$ = CHR$(27) THEN EXIT SUB
+    FILENAME$ = "saved." + KEYB$
+    LOADFILE FILENAME$, 2020, VARSEG(CHART&(0, 0)), 0, 0
+    IF ABORT% = 0 THEN
+        CLS
+        LOADFILE "message.2", 15008, &HA000, 19200, 1
+        IF ABORT% = 1 THEN EXIT SUB
+        DO
+            KEYB$ = UCASE$(INKEY$)
+        LOOP UNTIL KEYB$ = "Y" OR KEYB$ = "N"
+        IF KEYB$ = "N" THEN GOTO GET.SAVE.NAME
+    END IF
+    ABORT% = 0
+    CHART&(0, 22) = BAD.LEFT%: CHART&(1, 22) = BAD.RIGHT%: CHART&(2, 22) = BAD.UP%
+    CHART&(3, 22) = BAD.DOWN%: CHART&(4, 22) = BADX%: CHART&(5, 22) = BADY%
+    CHART&(6, 22) = BAD.HEALTH%: CHART&(7, 22) = COUNTER%: CHART&(8, 22) = DIRECTION%
+    CHART&(9, 22) = ERASE.FLAG%: CHART&(10, 22) = GO%: CHART&(11, 22) = GET.ME%
+    CHART&(12, 22) = ITEM&: CHART&(13, 22) = INFO.KEY%: CHART&(14, 22) = INFO.COIN%
+    CHART&(15, 22) = INFO.HEALTH%: CHART&(16, 22) = INFO.SHIELD%: CHART&(17, 22) = INFO.TIME%
+    CHART&(18, 22) = INFO.GUN%: CHART&(19, 22) = INFO.TRAP%: CHART&(20, 22) = INFO.DISK%
+    CHART&(0, 23) = KEYB%: CHART&(1, 23) = LEVEL%: CHART&(2, 23) = MAPX%
+    CHART&(3, 23) = MAPY%: CHART&(4, 23) = NOW.SHOOTING%: CHART&(5, 23) = NOTUP%
+    CHART&(6, 23) = NOTDOWN%: CHART&(7, 23) = NOTLEFT%: CHART&(8, 23) = NOTRIGHT%
+    CHART&(9, 23) = OUCH%: CHART&(10, 23) = OUCH.COUNT%: CHART&(11, 23) = SHOOT.VECTOR%
+    CHART&(12, 23) = SHOTX%: CHART&(13, 23) = SHOTY%: CHART&(14, 23) = SHOOT.COUNTER%
+    CHART&(15, 23) = WHATS.AHEAD%: CHART&(16, 23) = X%: CHART&(17, 23) = Y%
+    CHART&(18, 23) = SCORE%
+    CHART&(1, 0) = RETRY.KEY%: CHART&(2, 0) = RETRY.COIN%
+    CHART&(3, 0) = RETRY.SCORE%: CHART&(4, 0) = RETRY.SHIELD%
+    CHART&(5, 0) = RETRY.HEALTH%: CHART&(6, 0) = RETRY.GUN%
+    CHART&(7, 0) = RETRY.DISK%: CHART&(8, 0) = RETRY.TIME%
+
+    DEF SEG = VARSEG(CHART&(0, 0))
+    BSAVE FILENAME$, 0, VARPTR(CHART&(20, 23))
+END SUB
+
+SUB START.NEW.GAME
+    IF MAPX% = 0 THEN
+        LEVEL% = 0
+        NEW.LEVEL LEVEL%
+        IF ABORT% THEN EXIT SUB
+        MAPX% = CHART&(0, 6)
+        MAPY% = CHART&(0, 7)
+        X% = 149
+        Y% = 89
+        DIRECTION% = 1
+        INFO.HEALTH% = 5
+        GAME.OPEN% = 1
+    END IF
+    LINE (0, 0)-(319, 199), 1, BF
+    GOSUB NEWROOM
+    DO: DO: LOOP UNTIL INKEY$ = "": LOOP UNTIL INP(96) <> 28 AND INP(96) <> 1
+    PLAYLOOP:
+    DO: LOOP UNTIL INKEY$ = ""
+    KEYB% = INP(96)
+    IF ITEM& = 512 THEN
+        IF OUCH.COUNT% < 300 THEN OUCH.COUNT% = OUCH.COUNT% + 1
+        COUNTER% = COUNTER% + 1
+        IF COUNTER% = 3 OR NOW.SHOOTING% = 1 THEN GOSUB MONSTER: IF INFO.HEALTH% = 0 THEN END.GAME: EXIT SUB
+    END IF
+    IF SHOOT.COUNTER% < 200 THEN SHOOT.COUNTER% = SHOOT.COUNTER% + 1
+    IF NOW.SHOOTING% = 1 THEN DISTANCE% = 1: GOSUB SHOOT
+    SELECT CASE KEYB%
+        CASE 1: EXIT SUB
+        CASE 29
+            IF SHOOT.COUNTER% = 200 AND NOW.SHOOTING% = 0 AND INFO.GUN% > 0 THEN GOSUB SHOOT
+        CASE 72
+            IF NOTUP% = 0 THEN
+                Y% = Y% - 1
+                PUT (X%, Y%), IMAGE&(391), PSET
+                GO% = 1
+                DIRECTION% = 1
+            END IF
+        CASE 80
+            IF NOTDOWN% = 0 THEN
+                Y% = Y% + 1
+                PUT (X%, Y% - 1), IMAGE&(131), PSET
+                GO% = 1
+                DIRECTION% = 2
+            END IF
+        CASE 75
+            IF NOTLEFT% = 0 THEN
+                X% = X% - 1
+                PUT (X%, Y%), IMAGE&(261), PSET
+                GO% = 1
+                DIRECTION% = 3
+            END IF
+        CASE 77
+            IF NOTRIGHT% = 0 THEN
+                X% = X% + 1
+                PUT (X% - 1, Y%), IMAGE&(0), PSET
+                GO% = 1
+                DIRECTION% = 4
+            END IF
+    END SELECT
+    NOTUP% = POINT(X%, Y% - 1) + POINT(X% + 20, Y% - 1)
+    NOTDOWN% = POINT(X%, Y% + 21) + POINT(X% + 20, Y% + 21)
+    NOTLEFT% = POINT(X% - 1, Y%) + POINT(X% - 1, Y% + 20)
+    NOTRIGHT% = POINT(X% + 21, Y%) + POINT(X% + 21, Y% + 20)
+    IF GO% = 1 THEN
+        IF Y% = 0 THEN MAPY% = MAPY% - 1: Y% = 178: GOSUB NEWROOM
+        IF Y% = 179 THEN MAPY% = MAPY% + 1: Y% = 1: GOSUB NEWROOM
+        IF X% = 0 THEN MAPX% = MAPX% - 1: X% = 298: GOSUB NEWROOM
+        IF X% = 299 THEN MAPX% = MAPX% + 1: X% = 1: GOSUB NEWROOM
+    END IF
+    SELECT CASE GET.ME%
+        CASE 1
+            IF X% > 127 AND X% < 171 AND Y% > 67 AND Y% < 111 THEN GOSUB REACT
+            IF ABORT% THEN EXIT SUB
+        CASE 2
+            IF (INFO.KEY% > 0) AND (X% = 108 OR X% = 210 OR Y% = 28 OR Y% = 140) THEN
+                FOR A = 150 TO 0 STEP -1
+                    IF A MOD 2 THEN SOUND (A * 20) + 50, .0227275 ELSE SOUND (A * (20 + 10)) + 50, .0227275
+                NEXT A
+                INFO.KEY% = INFO.KEY% - 1
+                GET.ME% = 0
+                GO% = 1
+                LINE (129, 69)-(189, 139), 0, BF
+                CHART&(MAPX%, MAPY%) = CHART&(MAPX%, MAPY%) AND 15
+            END IF
+        CASE 3
+            IF (INFO.TRAP% AND 16) = 0 AND X% > 98 AND X% < 200 AND Y% > 38 AND Y% < 150 THEN
+                INFO.TRAP% = INFO.TRAP% + 16
+            END IF
+            IF (INFO.TRAP% AND 16) = 16 THEN
+                IF (X% < 99 AND (INFO.TRAP% AND 8) = 0) OR (X% > 199 AND (INFO.TRAP% AND 4) = 0) OR (Y% < 39 AND (INFO.TRAP% AND 2) = 0) OR (Y% > 149 AND (INFO.TRAP% AND 1) = 0) THEN
+                    LINE (119, 59)-(199, 149), 5, BF
+                    CHART&(MAPX%, MAPY%) = (CHART&(MAPX%, MAPY%) AND 15) + 131072
+                    GET.ME% = 0
+                END IF
+            END IF
+    END SELECT
+    _DELAY 0.002
+    GOTO PLAYLOOP
+    REACT:
+    GO% = 0
+    SELECT CASE ITEM&
+        CASE 16: INFO.KEY% = INFO.KEY% + 1: GO% = 1: PLAY "MBMLT255L64o5bababa"
+        CASE 32: INFO.COIN% = INFO.COIN% + 1: GO% = 1: INFO.SCORE% = INFO.SCORE% + 10: PLAY "MBT200L64O3DEFGABAGFEDC"
+        CASE 64: INFO.HEALTH% = INFO.HEALTH% + 1: GO% = 1: PLAY "MBMLT255L32o1co4do1co4do1co4do1co4do1co4do1co4d"
+        CASE 128: INFO.SHIELD% = INFO.SHIELD% + 1: GO% = 1: PLAY "MBMLT255L64o2cdefgab"
+        CASE 256: INFO.TIME% = INFO.TIME% + 1: GO% = 1: PLAY "MBMLT255L64o2cdefgab"
+        CASE 1024: INFO.GUN% = INFO.GUN% + 5: GO% = 1: PLAY "MBMLT255L64o2cdefgab"
+        CASE 8192: INFO.DISK% = INFO.DISK% + 1: PLAY "MBMLT255L64o2cdefgab"
+            IF INFO.DISK% = 4 THEN
+                LEVEL% = LEVEL% + 1: NEW.LEVEL LEVEL%: IF ABORT% = 1 THEN RETURN
+                ITEM& = 0: MAPX% = CHART&(0, 6): MAPY% = CHART&(0, 7)
+                X% = 149: Y% = 89: GOSUB NEWROOM: NOTUP% = 0
+                NOTDOWN% = 0: NOTLEFT% = 0: NOTRIGHT% = 0: INFO.DISK% = 0
+            ELSE
+                GO% = 1
+            END IF
+        CASE 16384:
+            NEW.LEVEL LEVEL%: ITEM& = 0: MAPX% = CHART&(0, 6): MAPY% = CHART&(0, 7)
+            X% = 149: Y% = 89: GOSUB NEWROOM: NOTUP% = 0: NOTDOWN% = 0: NOTLEFT% = 0: NOTRIGHT% = 0
+        CASE 32768
+            IF KEYB% = 57 THEN
+                FOR A = 0 TO 150 STEP 1
+                    IF A MOD 2 THEN SOUND (A * 20) + 50, .0227275 ELSE SOUND (A * (20 + 10)) + 50, .0227275
+                NEXT A
+                MAPX% = CHART&(0, 4)
+                MAPY% = CHART&(0, 5)
+                GO% = 2
+                GOSUB NEWROOM
+                GOSUB LETGO
+            END IF
+        CASE 65536
+            IF GO% = 0 AND KEYB% = 57 THEN
+                FOR A = 0 TO 150 STEP 1
+                    IF A MOD 2 THEN SOUND (A * 20) + 50, .0227275 ELSE SOUND (A * (20 + 10)) + 50, .0227275
+                NEXT A
+                MAPX% = CHART&(0, 2)
+                MAPY% = CHART&(0, 3)
+                GOSUB NEWROOM
+                GOSUB LETGO
+            END IF
+    END SELECT
+    IF GO% = 1 THEN
+        CHART&(MAPX%, MAPY%) = CHART&(MAPX%, MAPY%) AND 15
+        LINE (149, 89)-(169, 109), 0, BF
+        ITEM& = 0
+    END IF
+    GET.ME& = 0
+    RETURN
+    NEWROOM:
+    IF BEEN.HERE% = 1 THEN
+        NOW.SHOOTING% = 0
+        COUNTER% = 0
+        READY.TO.PLACE = 0
+    END IF
+    BADX% = 149
+    BADY% = 89
+    OUCH.COUNT% = 300
+    BAD.HEALTH% = 3
+    IF (CHART&(MAPX%, MAPY%) AND 1) = 0 THEN LINE (119, 0)-(199, 58), 1, BF
+    IF (CHART&(MAPX%, MAPY%) AND 2) = 0 THEN LINE (0, 59)-(118, 149), 1, BF
+    IF (CHART&(MAPX%, MAPY%) AND 4) = 0 THEN LINE (200, 59)-(319, 149), 1, BF
+    IF (CHART&(MAPX%, MAPY%) AND 8) = 0 THEN LINE (119, 150)-(199, 199), 1, BF
+    IF (CHART&(MAPX%, MAPY%) AND 1) THEN LINE (119, 0)-(199, 149), 0, BF
+    IF (CHART&(MAPX%, MAPY%) AND 2) THEN LINE (0, 59)-(199, 149), 0, BF
+    IF (CHART&(MAPX%, MAPY%) AND 4) THEN LINE (119, 59)-(319, 149), 0, BF
+    IF (CHART&(MAPX%, MAPY%) AND 8) THEN LINE (119, 59)-(199, 199), 0, BF
+    ITEM& = CHART&(MAPX%, MAPY%) - (CHART&(MAPX%, MAPY%) AND 15)
+    SELECT CASE DIRECTION%
+        CASE 1
+            PUT (X%, Y%), IMAGE&(391), PSET
+        CASE 2
+            PUT (X%, Y% - 1), IMAGE&(131), PSET
+        CASE 3
+            PUT (X%, Y%), IMAGE&(261), PSET
+        CASE 4
+            PUT (X% - 1, Y%), IMAGE&(0), PSET
+    END SELECT
+    GET.ME% = 0
+    SELECT CASE ITEM&
+        CASE 16: PUT (149, 89), IMAGE&(781), PSET: GET.ME% = 1
+        CASE 32: PUT (149, 89), IMAGE&(651), PSET: GET.ME% = 1
+        CASE 64: PUT (149, 89), IMAGE&(1041), PSET: GET.ME% = 1
+        CASE 128: PUT (149, 89), IMAGE&(911), PSET: GET.ME% = 1
+        CASE 256: PUT (149, 89), IMAGE&(1171), PSET: GET.ME% = 1
+        CASE 512: PUT (149, 89), IMAGE&(521), PSET: GET.ME% = 0
+        CASE 1024: PUT (149, 89), IMAGE&(1431), PSET: GET.ME% = 1
+        CASE 2048
+            GET.ME% = 3
+            LINE (149, 89)-(169, 109), 3, BF
+            IF BEEN.HERE% = 1 THEN
+                SELECT CASE DIRECTION%
+                    CASE 1
+                        INFO.TRAP% = 1
+                    CASE 2
+                        INFO.TRAP% = 2
+                    CASE 3
+                        INFO.TRAP% = 4
+                    CASE 4
+                        INFO.TRAP% = 8
+                END SELECT
+            END IF
+        CASE 4096: LINE (129, 69)-(189, 139), 3, BF: GET.ME% = 2
+        CASE 8192: PUT (149, 89), IMAGE&(1561), PSET: GET.ME% = 1
+        CASE 16384: PUT (149, 89), IMAGE&(1821), PSET: GET.ME% = 1
+        CASE 32768, 65536: PUT (149, 89), IMAGE&(1691), PSET: GET.ME% = 1
+        CASE 131072: LINE (119, 59)-(199, 149), 5, BF
+    END SELECT
+    BEEN.HERE% = 1
+    RETURN
+    MONSTER:
+    COUNTER% = 0
+    GO% = 0
+    IF BAD.HEALTH% = 0 THEN
+        GO% = 1
+        ITEM& = 0
+        CHART&(MAPX%, MAPY%) = (CHART&(MAPX%, MAPY%) AND 15)
+        LINE (BADX%, BADY%)-(BADX% + 20, BADY% + 20), 0, BF
+        RETURN
+    END IF
+    BADUP% = POINT(BADX%, BADY% - 1) + POINT(BADX% + 20, BADY% - 1)
+    BADDOWN% = POINT(BADX%, BADY% + 21) + POINT(BADX% + 20, BADY% + 21)
+    BADLEFT% = POINT(BADX% - 1, BADY%) + POINT(BADX% - 1, BADY% + 20)
+    BADRIGHT% = POINT(BADX% + 21, BADY%) + POINT(BADX% + 21, BADY% + 20)
+    IF BADX% = X% - 21 AND BADY% > Y% - 21 AND BADY% < Y% + 21 THEN OUCH% = 1
+    IF BADX% = X% + 21 AND BADY% > Y% - 21 AND BADY% < Y% + 21 THEN OUCH% = 1
+    IF BADY% = Y% - 21 AND BADX% > X% - 21 AND BADX% < X% + 21 THEN OUCH% = 1
+    IF BADY% = Y% + 21 AND BADX% > X% - 21 AND BADX% < X% + 21 THEN OUCH% = 1
+    IF OUCH% = 1 AND OUCH.COUNT% = 300 THEN
+        OUCH.COUNT% = 0
+        IF INFO.SHIELD% > 0 THEN
+            INFO.SHIELD% = INFO.SHIELD% - 1
+            PLAY "MBP1"
+        ELSE
+            INFO.HEALTH% = INFO.HEALTH% - 1
+            FOR A = 200 TO 0 STEP -1
+                SOUND (A * 40) + 50, .0227275
+            NEXT A
+        END IF
+    END IF
+    OUCH% = 0
+    IF BADX% < X% AND BADRIGHT% = 0 THEN
+        BADX% = BADX% + 1
+        GO% = 1
+        LINE (BADX% - 1, BADY%)-(BADX% - 1, BADY% + 20), 0
+    END IF
+    IF BADX% > X% AND BADLEFT% = 0 THEN
+        BADX% = BADX% - 1
+        GO% = 1
+        LINE (BADX% + 21, BADY%)-(BADX% + 21, BADY% + 20), 0
+    END IF
+    IF BADY% < Y% AND BADDOWN% = 0 THEN
+        BADY% = BADY% + 1
+        GO% = 1
+        LINE (BADX%, BADY% - 1)-(BADX% + 20, BADY% - 1), 0
+    END IF
+    IF BADY% > Y% AND BADUP% = 0 THEN
+        BADY% = BADY% - 1
+        GO% = 1
+        LINE (BADX%, BADY% + 21)-(BADX% + 20, BADY% + 21), 0
+    END IF
+    IF GO% = 1 THEN PUT (BADX%, BADY%), IMAGE&(521), PSET
+    RETURN
+    SHOOT:
+    IF NOW.SHOOTING% = 0 THEN
+        INFO.GUN% = INFO.GUN% - 1
+        NOW.SHOOTING% = 1
+        SHOTX% = X%
+        SHOTY% = Y%
+        SHOOT.VECTOR% = DIRECTION%
+        SHOOT.COUNTER% = 0
+        DISTANCE% = 0
+    END IF
+    SELECT CASE SHOOT.VECTOR%
+        CASE 1
+            SHOTY% = SHOTY% - 1
+            WHATS.AHEAD% = POINT(SHOTX% + 5, SHOTY% - 10) + POINT(SHOTX% + 15, SHOTY% - 10)
+            IF DISTANCE% = 1 THEN LINE (SHOTX% + 5, SHOTY% - 9)-(SHOTX% + 15, SHOTY% + 1), 0, B
+            IF WHATS.AHEAD% = 0 THEN
+                LINE (SHOTX% + 5, SHOTY% - 10)-(SHOTX% + 15, SHOTY%), 8, B
+            ELSE
+                NOW.SHOOTING% = 0
+                IF ITEM& = 512 AND BADY% - 1 < SHOTY% AND BADY% + 71 > SHOTY% AND BADX% - 31 < SHOTX% AND BADX% + 31 > SHOTX% THEN
+                    BAD.HEALTH% = BAD.HEALTH% - 1
+                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
+                ELSE
+                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
+                END IF
+            END IF
+        CASE 2
+            SHOTY% = SHOTY% + 1
+            WHATS.AHEAD% = POINT(SHOTX% + 5, SHOTY% + 30) + POINT(SHOTX% + 15, SHOTY% + 30)
+            IF DISTANCE% = 1 THEN LINE (SHOTX% + 5, SHOTY% + 19)-(SHOTX% + 15, SHOTY% + 29), 0, B
+            IF WHATS.AHEAD% = 0 THEN
+                LINE (SHOTX% + 5, SHOTY% + 20)-(SHOTX% + 15, SHOTY% + 30), 8, B
+            ELSE
+                NOW.SHOOTING% = 0
+                IF ITEM& = 512 AND BADY% - 41 < SHOTY% AND BADY% + 21 > SHOTY% AND BADX% - 31 < SHOTX% AND BADX% + 21 > SHOTX% THEN
+                    BAD.HEALTH% = BAD.HEALTH% - 1
+                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
+                ELSE
+                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
+                END IF
+            END IF
+        CASE 3
+            SHOTX% = SHOTX% - 1
+            WHATS.AHEAD% = POINT(SHOTX% - 11, SHOTY% + 5) + POINT(SHOTX% - 11, SHOTY% + 15)
+            IF DISTANCE% = 1 THEN LINE (SHOTX% - 10, SHOTY% + 5)-(SHOTX%, SHOTY% + 15), 0, B
+            IF WHATS.AHEAD% = 0 THEN
+                LINE (SHOTX% - 11, SHOTY% + 5)-(SHOTX% - 1, SHOTY% + 15), 8, B
+            ELSE
+                NOW.SHOOTING% = 0
+                IF ITEM& = 512 AND BADY% - 21 < SHOTY% AND BADY% + 31 > SHOTY% AND BADX% - 11 < SHOTX% AND BADX% + 32 > SHOTX% THEN
+                    BAD.HEALTH% = BAD.HEALTH% - 1
+                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
+                ELSE
+                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
+                END IF
+            END IF
+        CASE 4
+            SHOTX% = SHOTX% + 1
+            WHATS.AHEAD% = POINT(SHOTX% + 31, SHOTY% + 5) + POINT(SHOTX% + 31, SHOTY% + 15)
+            IF DISTANCE% = 1 THEN LINE (SHOTX% + 20, SHOTY% + 5)-(SHOTX% + 30, SHOTY% + 15), 0, B
+            IF WHATS.AHEAD% = 0 THEN
+                LINE (SHOTX% + 21, SHOTY% + 5)-(SHOTX% + 31, SHOTY% + 15), 8, B
+            ELSE
+                NOW.SHOOTING% = 0
+                IF ITEM& = 512 AND BADY% - 31 < SHOTY% AND BADY% + 31 > SHOTY% AND BADX% - 41 < SHOTX% AND BADX% + 32 > SHOTX% THEN
+                    BAD.HEALTH% = BAD.HEALTH% - 1
+                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
+                ELSE
+                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
+                END IF
+            END IF
+    END SELECT
+    RETURN
+    LETGO:
+    DO
+        DO: LOOP UNTIL INKEY$ = ""
+        LOOK% = INP(96)
+    LOOP UNTIL LOOK% <> KEYB% AND LOOK% <> 224
+    RETURN
+END SUB
+
