@@ -17,10 +17,8 @@ common shared retry.key%, retry.coin%, retry.score%, retry.shield%
 common shared retry.health%, retry.gun%, retry.disk%, retry.time%
 common shared level%
 common shared abort%, game.open%
-clear
 dim shared chart&(0 to 20, 0 to 23)
 dim shared image&(0 to 4160)
-dim shared colors&(0 to 51)
 abort% = initialize
 if abort% then system
 menu
@@ -28,18 +26,10 @@ screen 0
 width 80, 25
 clear
 system
-unexpected.error:
-if err then bad.error% = err: resume unexpected.error
-screen 0
-width 80, 25
-print "a major error has caused this program to terminate!"
-print "error number:  "; bad.error%; ".  inform the programmer of this number"
-system
+
 missing.file:
 abort% = 1
 resume next
-graphics.error:
-if err then resume graphics.error
 system
 
 sub end.game
@@ -60,6 +50,7 @@ sub end.game
 end sub
 
 function initialize
+    dim colors&(0 to 51)
     abort% = 0
     do: loop until inkey$ = ""
     cls
@@ -80,12 +71,10 @@ function initialize
     if initialize% = 1 then exit function
     initialize% = loadfile("message.3", 15008, &ha000, 0, 2)
     if initialize% = 1 then exit function
-    on error goto graphics.error
     screen 13
     for colorset% = 0 to 50
         palette colorset%, colors&(colorset%)
     next colorset%
-    on error goto unexpected.error
 end function
 
 sub load.a.game
@@ -144,7 +133,8 @@ function loadfile% (filename$, length&, segment!, offset!, flag%)
             width 80, 25
             print "file " + filename$ + " is missing!"
         end if
-        exit sub
+        loadfile% = 1
+        exit function
     end if
     close #1
     open filename$ for append as #1
@@ -156,8 +146,8 @@ function loadfile% (filename$, length&, segment!, offset!, flag%)
             width 80, 25
             print "file " + filename$ + " has wrong lenth!"
         end if
-        abort% = 1
-        exit sub
+        loadfile% = 1
+        exit function
     end if
     close #1
     if (flag% and 1) = 0 then exit sub
@@ -169,10 +159,10 @@ function loadfile% (filename$, length&, segment!, offset!, flag%)
             width 80, 25
             print "file " + filename$ + " is corrupt!"
         end if
-        abort% = 1
-        exit sub
+        loadfile% = 1
+        exit function
     end if
-    loadfile% = abort%
+    loadfile% = 0
 end function
 
 sub menu
@@ -229,7 +219,6 @@ sub new.level (level%)
         info.health% = retry.health%: info.gun% = info.gun%
         info.disk% = retry.disk%: info.time% = retry.time%
     end if
-    on error goto unexpected.error
     slevel% = level%
 end sub
 
