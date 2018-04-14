@@ -1,629 +1,641 @@
-DECLARE SUB END.GAME ()
-DECLARE FUNCTION INITIALIZE ()
-DECLARE SUB LOAD.A.GAME ()
-DECLARE FUNCTION LOADFILE (FILENAME$, LENTH&, SEGMENT!, OFFSET!, FLAG%)
-DECLARE SUB MENU ()
-DECLARE SUB NEW.LEVEL (LEVEL%)
-DECLARE SUB SAVE.THIS.GAME ()
-DECLARE SUB START.NEW.GAME ()
-DEFINT A-Z
-COMMON SHARED MAPX%, MAPY%, X%, Y%, DIRECTION%, KEYB%, NOW.SHOOTING%, COUNTER%
-COMMON SHARED ITEM&, DISTANCE%, NOTUP%, NOTDOWN%, NOTLEFT%, NOTRIGHT%, GO%
-COMMON SHARED SHOOT.VECTOR%, SHOTX%, SHOTY%, BAD.HEALTH%, BAD.RIGHT%, BAD.LEFT%
-COMMON SHARED BAD.UP%, BAD.DOWN%, WHATS.AHEAD%
-COMMON SHARED INFO.KEY%, INFO.COIN%, INFO.HEALTH%, INFO.SHIELD%, INFO.TIME%, INFO.GUN%
-COMMON SHARED INFO.TRAP%, INFO.DISK%, SHOOT.COUNTER%, GET.ME%, OUCH%, OUCH.COUNT%
-COMMON SHARED RETRY.KEY%, RETRY.COIN%, RETRY.SCORE%, RETRY.SHIELD%
-COMMON SHARED RETRY.HEALTH%, RETRY.GUN%, RETRY.DISK%, RETRY.TIME%
-COMMON SHARED LEVEL%
-COMMON SHARED ABORT%, GAME.OPEN%
-CLEAR
-DIM SHARED CHART&(0 TO 20, 0 TO 23)
-DIM SHARED IMAGE&(0 TO 4160)
-DIM SHARED COLORS&(0 TO 51)
-ABORT% = INITIALIZE
-IF ABORT% THEN SYSTEM
-MENU
-SCREEN 0
-WIDTH 80, 25
-CLEAR
-SYSTEM
-UNEXPECTED.ERROR:
-IF ERR THEN BAD.ERROR% = ERR: RESUME UNEXPECTED.ERROR
-SCREEN 0
-WIDTH 80, 25
-PRINT "A MAJOR ERROR HAS CAUSED THIS PROGRAM TO TERMINATE!"
-PRINT "ERROR NUMBER:  "; BAD.ERROR%; ".  INFORM THE PROGRAMMER OF THIS NUMBER"
-SYSTEM
-MISSING.FILE:
-ABORT% = 1
-RESUME NEXT
-GRAPHICS.ERROR:
-IF ERR THEN RESUME GRAPHICS.ERROR
-SYSTEM
+declare sub end.game ()
+declare function initialize ()
+declare sub load.a.game ()
+declare function loadfile (filename$, lenth&, segment!, offset!, flag%)
+declare sub menu ()
+declare sub new.level (level%)
+declare sub save.this.game ()
+declare sub start.new.game ()
+defint a-z
+common shared mapx%, mapy%, x%, y%, direction%, keyb%, now.shooting%, counter%
+common shared item&, distance%, notup%, notdown%, notleft%, notright%, go%
+common shared shoot.vector%, shotx%, shoty%, bad.health%, bad.right%, bad.left%
+common shared bad.up%, bad.down%, whats.ahead%
+common shared info.key%, info.coin%, info.health%, info.shield%, info.time%, info.gun%
+common shared info.trap%, info.disk%, shoot.counter%, get.me%, ouch%, ouch.count%
+common shared retry.key%, retry.coin%, retry.score%, retry.shield%
+common shared retry.health%, retry.gun%, retry.disk%, retry.time%
+common shared level%
+common shared abort%, game.open%
+clear
+dim shared chart&(0 to 20, 0 to 23)
+dim shared image&(0 to 4160)
+dim shared colors&(0 to 51)
+abort% = initialize
+if abort% then system
+menu
+screen 0
+width 80, 25
+clear
+system
+unexpected.error:
+if err then bad.error% = err: resume unexpected.error
+screen 0
+width 80, 25
+print "a major error has caused this program to terminate!"
+print "error number:  "; bad.error%; ".  inform the programmer of this number"
+system
+missing.file:
+abort% = 1
+resume next
+graphics.error:
+if err then resume graphics.error
+system
 
-SUB END.GAME
-    MAPX% = 0: MAPY% = 0: X% = 0: Y% = 0: DIRECTION% = 0: KEYB% = 0: NOW.SHOOTING% = 0
-    COUNTER% = 0: ITEM& = 0: DISTANCE% = 0: NOTUP% = 0: NOTDOWN% = 0: NOTLEFT% = 0
-    NOTRIGHT% = 0: GO% = 0: SHOOT.VECTOR% = 0: SHOTX% = 0: SHOTY% = 0
-    BAD.HEALTH% = 0: BAD.RIGHT% = 0: BAD.LEFT% = 0: BAD.UP% = 0: BAD.DOWN% = 0: WHATS.AHEAD% = 0
-    INFO.KEY% = 0: INFO.COIN% = 0: INFO.HEALTH% = 0: INFO.SHIELD% = 0: INFO.TIME% = 0: INFO.GUN% = 0
-    INFO.TRAP% = 0: INFO.DISK% = 0: SHOOT.COUNTER% = 0: GET.ME% = 0: OUCH% = 0: OUCH.COUNT% = 0
-    RETRY.KEY% = 0: RETRY.COIN% = 0: RETRY.SCORE% = 0: RETRY.SHIELD% = 0
-    RETRY.HEALTH% = 0: RETRY.GUN% = 0: RETRY.DISK% = 0: RETRY.TIME% = 0
-    LEVEL% = 0
-    GAME.OPEN% = 0
-    DEF SEG = VARSEG(CHART&(0, 0))
-    FOR NULL% = 0 TO VARPTR(CHART&(20, 23))
-        POKE NULL%, 0
-    NEXT NULL%
-END SUB
+sub end.game
+    mapx% = 0: mapy% = 0: x% = 0: y% = 0: direction% = 0: keyb% = 0: now.shooting% = 0
+    counter% = 0: item& = 0: distance% = 0: notup% = 0: notdown% = 0: notleft% = 0
+    notright% = 0: go% = 0: shoot.vector% = 0: shotx% = 0: shoty% = 0
+    bad.health% = 0: bad.right% = 0: bad.left% = 0: bad.up% = 0: bad.down% = 0: whats.ahead% = 0
+    info.key% = 0: info.coin% = 0: info.health% = 0: info.shield% = 0: info.time% = 0: info.gun% = 0
+    info.trap% = 0: info.disk% = 0: shoot.counter% = 0: get.me% = 0: ouch% = 0: ouch.count% = 0
+    retry.key% = 0: retry.coin% = 0: retry.score% = 0: retry.shield% = 0
+    retry.health% = 0: retry.gun% = 0: retry.disk% = 0: retry.time% = 0
+    level% = 0
+    game.open% = 0
+    def seg = varseg(chart&(0, 0))
+    for null% = 0 to varptr(chart&(20, 23))
+        poke null%, 0
+    next null%
+end sub
 
-FUNCTION INITIALIZE
-    ABORT% = 0
-    DO: LOOP UNTIL INKEY$ = ""
-    CLS
-    PRINT "LOADING..."
-    INITIALIZE% = LOADFILE("images.0", 12008, VARSEG(IMAGE&(0)), 0, 3)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("pal.0", 212, VARSEG(COLORS&(0)), 0, 3)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("menu.0", 64008, &HA000, 0, 3)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("loadmenu.0", 30008, &HA000, 0, 2)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("savemenu.0", 30008, &HA000, 0, 2)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("message.1", 15008, &HA000, 0, 2)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("message.2", 15008, &HA000, 0, 2)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    INITIALIZE% = LOADFILE("message.3", 15008, &HA000, 0, 2)
-    IF INITIALIZE% = 1 THEN EXIT FUNCTION
-    ON ERROR GOTO GRAPHICS.ERROR
-    SCREEN 13
-    FOR COLORSET% = 0 TO 50
-        PALETTE COLORSET%, COLORS&(COLORSET%)
-    NEXT COLORSET%
-    ON ERROR GOTO UNEXPECTED.ERROR
-END FUNCTION
+function initialize
+    abort% = 0
+    do: loop until inkey$ = ""
+    cls
+    print "loading..."
+    initialize% = loadfile("images.0", 12008, varseg(image&(0)), 0, 3)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("pal.0", 212, varseg(colors&(0)), 0, 3)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("menu.0", 64008, &ha000, 0, 3)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("loadmenu.0", 30008, &ha000, 0, 2)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("savemenu.0", 30008, &ha000, 0, 2)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("message.1", 15008, &ha000, 0, 2)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("message.2", 15008, &ha000, 0, 2)
+    if initialize% = 1 then exit function
+    initialize% = loadfile("message.3", 15008, &ha000, 0, 2)
+    if initialize% = 1 then exit function
+    on error goto graphics.error
+    screen 13
+    for colorset% = 0 to 50
+        palette colorset%, colors&(colorset%)
+    next colorset%
+    on error goto unexpected.error
+end function
 
-SUB LOAD.A.GAME
-    SELECT.GAME:
-    CLS
-    ABORT% = LOADFILE("loadmenu.0", 30008, &HA000, 19200, 1)
-    IF ABORT% = 1 THEN EXIT SUB
-    DO
-        DO
-            KEYB$ = INKEY$
-        LOOP UNTIL KEYB$ <> ""
-    LOOP UNTIL (ASC(KEYB$) < 58 AND ASC(KEYB$) > 48) OR KEYB$ = CHR$(27)
-    IF KEYB$ = CHR$(27) THEN EXIT SUB
-    FILENAME$ = "saved." + KEYB$
-    ABORT% = LOADFILE(FILENAME$, 2020, VARSEG(CHART&(0, 0)), 0, 1)
-    IF ABORT% = 1 THEN
-        ABORT% = 0
-        CLS
-        ABORT% = LOADFILE("message.1", 15008, &HA000, 19200, 1)
-        IF ABORT% = 1 THEN EXIT SUB
-        DO: LOOP UNTIL INKEY$ = ""
-        DO: LOOP UNTIL INKEY$ <> ""
-        GOTO SELECT.GAME
-    END IF
-    BAD.LEFT% = CHART&(0, 22): BAD.RIGHT% = CHART&(1, 22): BAD.UP% = CHART&(2, 22)
-    BAD.DOWN% = CHART&(3, 22): BADX% = CHART&(4, 22): BADY% = CHART&(5, 22)
-    BAD.HEALTH% = CHART&(6, 22): COUNTER% = CHART&(7, 22): DIRECTION% = CHART&(8, 22)
-    ERASE.FLAG% = CHART&(9, 22): GO% = CHART&(10, 22): GET.ME% = CHART&(11, 22)
-    ITEM& = CHART&(12, 22): INFO.KEY% = CHART&(13, 22): INFO.COIN% = CHART&(14, 22)
-    INFO.HEALTH% = CHART&(15, 22): INFO.SHIELD% = CHART&(16, 22): INFO.TIME% = CHART&(17, 22)
-    INFO.GUN% = CHART&(18, 22): INFO.TRAP% = CHART&(19, 22): INFO.DISK% = CHART&(20, 22)
-    KEYB% = CHART&(0, 23): LEVEL% = CHART&(1, 23): MAPX% = CHART&(2, 23)
-    MAPY% = CHART&(3, 23): NOW.SHOOTING% = CHART&(4, 23): NOTUP% = CHART&(5, 23)
-    NOTDOWN% = CHART&(6, 23): NOTLEFT% = CHART&(7, 23): NOTRIGHT% = CHART&(8, 23)
-    OUCH% = CHART&(9, 23): OUCH.COUNT% = CHART&(10, 23): SHOOT.VECTOR% = CHART&(11, 23)
-    SHOTX% = CHART&(12, 23): SHOTY% = CHART&(13, 23): SHOOT.COUNTER% = CHART&(14, 23)
-    WHATS.AHEAD% = CHART&(15, 23): X% = CHART&(16, 23): Y% = CHART&(17, 23)
-    SCORE% = CHART&(18, 23)
-    RETRY.KEY% = CHART&(1, 0): RETRY.COIN% = CHART&(2, 0)
-    RETRY.SCORE% = CHART&(3, 0): RETRY.SHIELD% = CHART&(4, 0)
-    RETRY.HEALTH% = CHART&(5, 0): RETRY.GUN% = CHART&(6, 0)
-    RETRY.DISK% = CHART&(7, 0): RETRY.TIME% = CHART&(8, 0)
-    GAME.OPEN% = 1
-    START.NEW.GAME
-END SUB
+sub load.a.game
+    select.game:
+    cls
+    abort% = loadfile("loadmenu.0", 30008, &ha000, 19200, 1)
+    if abort% = 1 then exit sub
+    do
+        do
+            keyb$ = inkey$
+        loop until keyb$ <> ""
+    loop until (asc(keyb$) < 58 and asc(keyb$) > 48) or keyb$ = chr$(27)
+    if keyb$ = chr$(27) then exit sub
+    filename$ = "saved." + keyb$
+    abort% = loadfile(filename$, 2020, varseg(chart&(0, 0)), 0, 1)
+    if abort% = 1 then
+        abort% = 0
+        cls
+        abort% = loadfile("message.1", 15008, &ha000, 19200, 1)
+        if abort% = 1 then exit sub
+        do: loop until inkey$ = ""
+        do: loop until inkey$ <> ""
+        goto select.game
+    end if
+    bad.left% = chart&(0, 22): bad.right% = chart&(1, 22): bad.up% = chart&(2, 22)
+    bad.down% = chart&(3, 22): badx% = chart&(4, 22): bady% = chart&(5, 22)
+    bad.health% = chart&(6, 22): counter% = chart&(7, 22): direction% = chart&(8, 22)
+    erase.flag% = chart&(9, 22): go% = chart&(10, 22): get.me% = chart&(11, 22)
+    item& = chart&(12, 22): info.key% = chart&(13, 22): info.coin% = chart&(14, 22)
+    info.health% = chart&(15, 22): info.shield% = chart&(16, 22): info.time% = chart&(17, 22)
+    info.gun% = chart&(18, 22): info.trap% = chart&(19, 22): info.disk% = chart&(20, 22)
+    keyb% = chart&(0, 23): level% = chart&(1, 23): mapx% = chart&(2, 23)
+    mapy% = chart&(3, 23): now.shooting% = chart&(4, 23): notup% = chart&(5, 23)
+    notdown% = chart&(6, 23): notleft% = chart&(7, 23): notright% = chart&(8, 23)
+    ouch% = chart&(9, 23): ouch.count% = chart&(10, 23): shoot.vector% = chart&(11, 23)
+    shotx% = chart&(12, 23): shoty% = chart&(13, 23): shoot.counter% = chart&(14, 23)
+    whats.ahead% = chart&(15, 23): x% = chart&(16, 23): y% = chart&(17, 23)
+    score% = chart&(18, 23)
+    retry.key% = chart&(1, 0): retry.coin% = chart&(2, 0)
+    retry.score% = chart&(3, 0): retry.shield% = chart&(4, 0)
+    retry.health% = chart&(5, 0): retry.gun% = chart&(6, 0)
+    retry.disk% = chart&(7, 0): retry.time% = chart&(8, 0)
+    game.open% = 1
+    start.new.game
+end sub
 
-FUNCTION LOADFILE% (FILENAME$, LENGTH&, SEGMENT!, OFFSET!, FLAG%)
-    ABORT% = 0
-    ON ERROR GOTO MISSING.FILE
-    CLOSE #1
-    OPEN FILENAME$ FOR INPUT AS #1
-    CLOSE #1
-    IF ABORT% = 1 THEN
-        IF (FLAG% AND 2) THEN
-            SCREEN 0
-            WIDTH 80, 25
-            PRINT "FILE " + FILENAME$ + " IS MISSING!"
-        END IF
-        EXIT SUB
-    END IF
-    CLOSE #1
-    OPEN FILENAME$ FOR APPEND AS #1
-    IF SEEK(1) <> LENGTH& THEN PROBLEM% = 1
-    CLOSE #1
-    IF PROBLEM% THEN
-        IF (FLAG% AND 2) THEN
-            SCREEN 0
-            WIDTH 80, 25
-            PRINT "FILE " + FILENAME$ + " HAS WRONG LENTH!"
-        END IF
-        ABORT% = 1
-        EXIT SUB
-    END IF
-    CLOSE #1
-    IF (FLAG% AND 1) = 0 THEN EXIT SUB
-    DEF SEG = SEGMENT!
-    BLOAD FILENAME$, OFFSET!
-    IF PROBLEM% THEN
-        IF (FLAG% AND 2) THEN
-            SCREEN 0
-            WIDTH 80, 25
-            PRINT "FILE " + FILENAME$ + " IS CORRUPT!"
-        END IF
-        ABORT% = 1
-        EXIT SUB
-    END IF
-    LOADFILE% = ABORT%
-END FUNCTION
+function loadfile% (filename$, length&, segment!, offset!, flag%)
+    abort% = 0
+    on error goto missing.file
+    close #1
+    open filename$ for input as #1
+    close #1
+    if abort% = 1 then
+        if (flag% and 2) then
+            screen 0
+            width 80, 25
+            print "file " + filename$ + " is missing!"
+        end if
+        exit sub
+    end if
+    close #1
+    open filename$ for append as #1
+    if seek(1) <> length& then problem% = 1
+    close #1
+    if problem% then
+        if (flag% and 2) then
+            screen 0
+            width 80, 25
+            print "file " + filename$ + " has wrong lenth!"
+        end if
+        abort% = 1
+        exit sub
+    end if
+    close #1
+    if (flag% and 1) = 0 then exit sub
+    def seg = segment!
+    bload filename$, offset!
+    if problem% then
+        if (flag% and 2) then
+            screen 0
+            width 80, 25
+            print "file " + filename$ + " is corrupt!"
+        end if
+        abort% = 1
+        exit sub
+    end if
+    loadfile% = abort%
+end function
 
-SUB MENU
-    STATIC LOCATION%
-    MOVECURSOR% = 1
-    LOAD.MENU:
-    DEF SEG = &HA000
-    BLOAD "menu.0", 0
-    DO: DO: LOOP UNTIL INKEY$ = "": LOOP UNTIL INP(96) <> 28 AND INP(96) <> 1
-    MENU.LOOP:
-    SLOCATION% = LOCATION%
-    KEYB$ = INKEY$
-    IF KEYB$ = CHR$(0) + "H" AND LOCATION% > 0 THEN
-        LOCATION% = LOCATION% - 1
-        MOVECURSOR% = 1
-    END IF
-    IF KEYB$ = CHR$(0) + "P" AND LOCATION% < 4 THEN
-        LOCATION% = LOCATION% + 1
-        MOVECURSOR% = 1
-    END IF
-    IF GAME.OPEN% = 1 AND KEYB$ = CHR$(27) THEN KEYB$ = CHR$(13): LOCATION% = 0
-    IF KEYB$ = CHR$(13) OR KEYB$ = CHR$(32) THEN: GOTO SELECT.AN.OPTION
-    IF MOVECURSOR% = 1 THEN
-        LINE (60, (SLOCATION% * 40) + 6)-(245, (SLOCATION% * 40) + 34), 0, B
-        LINE (60, (LOCATION% * 40) + 6)-(245, (LOCATION% * 40) + 34), 7, B
-        MOVECURSOR% = 0
-    END IF
-    GOTO MENU.LOOP
-    SELECT.AN.OPTION:
-    IF LOCATION% = 0 THEN START.NEW.GAME
-    IF LOCATION% = 1 THEN LOAD.A.GAME
-    IF LOCATION% = 2 THEN SAVE.THIS.GAME
-    IF LOCATION% = 3 THEN END.GAME
-    IF LOCATION% = 4 THEN EXIT SUB
-    IF ABORT% = 1 THEN EXIT SUB
-    MOVECURSOR% = 1
-    GOTO LOAD.MENU
-END SUB
+sub menu
+    static location%
+    movecursor% = 1
+    load.menu:
+    def seg = &ha000
+    bload "menu.0", 0
+    do: do: loop until inkey$ = "": loop until inp(96) <> 28 and inp(96) <> 1
+    menu.loop:
+    slocation% = location%
+    keyb$ = inkey$
+    if keyb$ = chr$(0) + "H" and location% > 0 then
+        location% = location% - 1
+        movecursor% = 1
+    end if
+    if keyb$ = chr$(0) + "P" and location% < 4 then
+        location% = location% + 1
+        movecursor% = 1
+    end if
+    if game.open% = 1 and keyb$ = chr$(27) then keyb$ = chr$(13): location% = 0
+    if keyb$ = chr$(13) or keyb$ = chr$(32) then: goto select.an.option
+    if movecursor% = 1 then
+        line (60, (slocation% * 40) + 6)-(245, (slocation% * 40) + 34), 0, b
+        line (60, (location% * 40) + 6)-(245, (location% * 40) + 34), 7, b
+        movecursor% = 0
+    end if
+    goto menu.loop
+    select.an.option:
+    if location% = 0 then start.new.game
+    if location% = 1 then load.a.game
+    if location% = 2 then save.this.game
+    if location% = 3 then end.game
+    if location% = 4 then exit sub
+    if abort% = 1 then exit sub
+    movecursor% = 1
+    goto load.menu
+end sub
 
-DEFSNG A-Z
-SUB NEW.LEVEL (LEVEL%)
-    STATIC SLEVEL%
-    ABORT% = 0
-    FILENAME$ = "level." + LTRIM$(RTRIM$(STR$(LEVEL%)))
-    ABORT% = LOADFILE(FILENAME$, 1852, VARSEG(CHART&(0, 0)), 0, 3)
-    IF SLEVEL% < LEVEL% THEN
-        RETRY.KEY% = INFO.KEY%: RETRY.COIN% = INFO.COIN%
-        RETRY.SCORE% = INFO.SCORE%: RETRY.SHIELD% = INFO.SHIELD%
-        RETRY.HEALTH% = INFO.HEALTH%: RETRY.GUN% = INFO.GUN%
-        RETRY.DISK% = INFO.DISK%: RETRY.TIME% = INFO.TIME%
-    ELSE
-        INFO.KEY% = RETRY.KEY: INFO.COIN% = RETRY.COIN%
-        INFO.SCORE% = RETRY.SCORE%: INFO.SHIELD% = RETRY.SHIELD%
-        INFO.HEALTH% = RETRY.HEALTH%: INFO.GUN% = INFO.GUN%
-        INFO.DISK% = RETRY.DISK%: INFO.TIME% = RETRY.TIME%
-    END IF
-    ON ERROR GOTO UNEXPECTED.ERROR
-    SLEVEL% = LEVEL%
-END SUB
+defsng a-z
+sub new.level (level%)
+    static slevel%
+    abort% = 0
+    filename$ = "level." + ltrim$(rtrim$(str$(level%)))
+    abort% = loadfile(filename$, 1852, varseg(chart&(0, 0)), 0, 3)
+    if slevel% < level% then
+        retry.key% = info.key%: retry.coin% = info.coin%
+        retry.score% = info.score%: retry.shield% = info.shield%
+        retry.health% = info.health%: retry.gun% = info.gun%
+        retry.disk% = info.disk%: retry.time% = info.time%
+    else
+        info.key% = retry.key: info.coin% = retry.coin%
+        info.score% = retry.score%: info.shield% = retry.shield%
+        info.health% = retry.health%: info.gun% = info.gun%
+        info.disk% = retry.disk%: info.time% = retry.time%
+    end if
+    on error goto unexpected.error
+    slevel% = level%
+end sub
 
-DEFINT A-Z
-SUB SAVE.THIS.GAME
-    IF GAME.OPEN% = 0 THEN
-        CLS
-        ABORT% = LOADFILE("message.3", 15008, &HA000, 19200, 1)
-        DO: LOOP UNTIL INKEY$ = ""
-        DO: LOOP UNTIL INKEY$ <> ""
-        EXIT SUB
-    END IF
-    GET.SAVE.NAME:
-    CLS
-    ABORT% = LOADFILE("savemenu.0", 30008, &HA000, 19200, 1)
-    DO
-        KEYB$ = INKEY$
-    LOOP UNTIL (KEYB$ < CHR$(58) AND KEYB$ > CHR$(48)) OR KEYB$ = CHR$(27)
-    IF KEYB$ = CHR$(27) THEN EXIT SUB
-    FILENAME$ = "saved." + KEYB$
-    ABORT% = LOADFILE(FILENAME$, 2020, VARSEG(CHART&(0, 0)), 0, 0)
-    IF ABORT% = 0 THEN
-        CLS
-        ABORT% = LOADFILE("message.2", 15008, &HA000, 19200, 1)
-        IF ABORT% = 1 THEN EXIT SUB
-        DO
-            KEYB$ = UCASE$(INKEY$)
-        LOOP UNTIL KEYB$ = "Y" OR KEYB$ = "N"
-        IF KEYB$ = "N" THEN GOTO GET.SAVE.NAME
-    END IF
-    ABORT% = 0
-    CHART&(0, 22) = BAD.LEFT%: CHART&(1, 22) = BAD.RIGHT%: CHART&(2, 22) = BAD.UP%
-    CHART&(3, 22) = BAD.DOWN%: CHART&(4, 22) = BADX%: CHART&(5, 22) = BADY%
-    CHART&(6, 22) = BAD.HEALTH%: CHART&(7, 22) = COUNTER%: CHART&(8, 22) = DIRECTION%
-    CHART&(9, 22) = ERASE.FLAG%: CHART&(10, 22) = GO%: CHART&(11, 22) = GET.ME%
-    CHART&(12, 22) = ITEM&: CHART&(13, 22) = INFO.KEY%: CHART&(14, 22) = INFO.COIN%
-    CHART&(15, 22) = INFO.HEALTH%: CHART&(16, 22) = INFO.SHIELD%: CHART&(17, 22) = INFO.TIME%
-    CHART&(18, 22) = INFO.GUN%: CHART&(19, 22) = INFO.TRAP%: CHART&(20, 22) = INFO.DISK%
-    CHART&(0, 23) = KEYB%: CHART&(1, 23) = LEVEL%: CHART&(2, 23) = MAPX%
-    CHART&(3, 23) = MAPY%: CHART&(4, 23) = NOW.SHOOTING%: CHART&(5, 23) = NOTUP%
-    CHART&(6, 23) = NOTDOWN%: CHART&(7, 23) = NOTLEFT%: CHART&(8, 23) = NOTRIGHT%
-    CHART&(9, 23) = OUCH%: CHART&(10, 23) = OUCH.COUNT%: CHART&(11, 23) = SHOOT.VECTOR%
-    CHART&(12, 23) = SHOTX%: CHART&(13, 23) = SHOTY%: CHART&(14, 23) = SHOOT.COUNTER%
-    CHART&(15, 23) = WHATS.AHEAD%: CHART&(16, 23) = X%: CHART&(17, 23) = Y%
-    CHART&(18, 23) = SCORE%
-    CHART&(1, 0) = RETRY.KEY%: CHART&(2, 0) = RETRY.COIN%
-    CHART&(3, 0) = RETRY.SCORE%: CHART&(4, 0) = RETRY.SHIELD%
-    CHART&(5, 0) = RETRY.HEALTH%: CHART&(6, 0) = RETRY.GUN%
-    CHART&(7, 0) = RETRY.DISK%: CHART&(8, 0) = RETRY.TIME%
+defint a-z
+sub save.this.game
+    if game.open% = 0 then
+        cls
+        abort% = loadfile("message.3", 15008, &ha000, 19200, 1)
+        do: loop until inkey$ = ""
+        do: loop until inkey$ <> ""
+        exit sub
+    end if
+    get.save.name:
+    cls
+    abort% = loadfile("savemenu.0", 30008, &ha000, 19200, 1)
+    do
+        keyb$ = inkey$
+    loop until (keyb$ < chr$(58) and keyb$ > chr$(48)) or keyb$ = chr$(27)
+    if keyb$ = chr$(27) then exit sub
+    filename$ = "saved." + keyb$
+    abort% = loadfile(filename$, 2020, varseg(chart&(0, 0)), 0, 0)
+    if abort% = 0 then
+        cls
+        abort% = loadfile("message.2", 15008, &ha000, 19200, 1)
+        if abort% = 1 then exit sub
+        do
+            keyb$ = ucase$(inkey$)
+        loop until keyb$ = "y" or keyb$ = "n"
+        if keyb$ = "n" then goto get.save.name
+    end if
+    abort% = 0
+    chart&(0, 22) = bad.left%: chart&(1, 22) = bad.right%: chart&(2, 22) = bad.up%
+    chart&(3, 22) = bad.down%: chart&(4, 22) = badx%: chart&(5, 22) = bady%
+    chart&(6, 22) = bad.health%: chart&(7, 22) = counter%: chart&(8, 22) = direction%
+    chart&(9, 22) = erase.flag%: chart&(10, 22) = go%: chart&(11, 22) = get.me%
+    chart&(12, 22) = item&: chart&(13, 22) = info.key%: chart&(14, 22) = info.coin%
+    chart&(15, 22) = info.health%: chart&(16, 22) = info.shield%: chart&(17, 22) = info.time%
+    chart&(18, 22) = info.gun%: chart&(19, 22) = info.trap%: chart&(20, 22) = info.disk%
+    chart&(0, 23) = keyb%: chart&(1, 23) = level%: chart&(2, 23) = mapx%
+    chart&(3, 23) = mapy%: chart&(4, 23) = now.shooting%: chart&(5, 23) = notup%
+    chart&(6, 23) = notdown%: chart&(7, 23) = notleft%: chart&(8, 23) = notright%
+    chart&(9, 23) = ouch%: chart&(10, 23) = ouch.count%: chart&(11, 23) = shoot.vector%
+    chart&(12, 23) = shotx%: chart&(13, 23) = shoty%: chart&(14, 23) = shoot.counter%
+    chart&(15, 23) = whats.ahead%: chart&(16, 23) = x%: chart&(17, 23) = y%
+    chart&(18, 23) = score%
+    chart&(1, 0) = retry.key%: chart&(2, 0) = retry.coin%
+    chart&(3, 0) = retry.score%: chart&(4, 0) = retry.shield%
+    chart&(5, 0) = retry.health%: chart&(6, 0) = retry.gun%
+    chart&(7, 0) = retry.disk%: chart&(8, 0) = retry.time%
 
-    DEF SEG = VARSEG(CHART&(0, 0))
-    BSAVE FILENAME$, 0, VARPTR(CHART&(20, 23))
-END SUB
+    def seg = varseg(chart&(0, 0))
+    bsave filename$, 0, varptr(chart&(20, 23))
+end sub
 
-SUB START.NEW.GAME
-    IF MAPX% = 0 THEN
-        LEVEL% = 0
-        NEW.LEVEL LEVEL%
-        IF ABORT% THEN EXIT SUB
-        MAPX% = CHART&(0, 6)
-        MAPY% = CHART&(0, 7)
-        X% = 149
-        Y% = 89
-        DIRECTION% = 1
-        INFO.HEALTH% = 5
-        GAME.OPEN% = 1
-    END IF
-    LINE (0, 0)-(319, 199), 1, BF
-    GOSUB NEWROOM
-    DO: DO: LOOP UNTIL INKEY$ = "": LOOP UNTIL INP(96) <> 28 AND INP(96) <> 1
-    PLAYLOOP:
-    DO: LOOP UNTIL INKEY$ = ""
-    KEYB% = INP(96)
-    IF ITEM& = 512 THEN
-        IF OUCH.COUNT% < 300 THEN OUCH.COUNT% = OUCH.COUNT% + 1
-        COUNTER% = COUNTER% + 1
-        IF COUNTER% = 3 OR NOW.SHOOTING% = 1 THEN GOSUB MONSTER: IF INFO.HEALTH% = 0 THEN END.GAME: EXIT SUB
-    END IF
-    IF SHOOT.COUNTER% < 200 THEN SHOOT.COUNTER% = SHOOT.COUNTER% + 1
-    IF NOW.SHOOTING% = 1 THEN DISTANCE% = 1: GOSUB SHOOT
-    SELECT CASE KEYB%
-        CASE 1: EXIT SUB
-        CASE 29
-            IF SHOOT.COUNTER% = 200 AND NOW.SHOOTING% = 0 AND INFO.GUN% > 0 THEN GOSUB SHOOT
-        CASE 72
-            IF NOTUP% = 0 THEN
-                Y% = Y% - 1
-                PUT (X%, Y%), IMAGE&(391), PSET
-                GO% = 1
-                DIRECTION% = 1
-            END IF
-        CASE 80
-            IF NOTDOWN% = 0 THEN
-                Y% = Y% + 1
-                PUT (X%, Y% - 1), IMAGE&(131), PSET
-                GO% = 1
-                DIRECTION% = 2
-            END IF
-        CASE 75
-            IF NOTLEFT% = 0 THEN
-                X% = X% - 1
-                PUT (X%, Y%), IMAGE&(261), PSET
-                GO% = 1
-                DIRECTION% = 3
-            END IF
-        CASE 77
-            IF NOTRIGHT% = 0 THEN
-                X% = X% + 1
-                PUT (X% - 1, Y%), IMAGE&(0), PSET
-                GO% = 1
-                DIRECTION% = 4
-            END IF
-    END SELECT
-    NOTUP% = POINT(X%, Y% - 1) + POINT(X% + 20, Y% - 1)
-    NOTDOWN% = POINT(X%, Y% + 21) + POINT(X% + 20, Y% + 21)
-    NOTLEFT% = POINT(X% - 1, Y%) + POINT(X% - 1, Y% + 20)
-    NOTRIGHT% = POINT(X% + 21, Y%) + POINT(X% + 21, Y% + 20)
-    IF GO% = 1 THEN
-        IF Y% = 0 THEN MAPY% = MAPY% - 1: Y% = 178: GOSUB NEWROOM
-        IF Y% = 179 THEN MAPY% = MAPY% + 1: Y% = 1: GOSUB NEWROOM
-        IF X% = 0 THEN MAPX% = MAPX% - 1: X% = 298: GOSUB NEWROOM
-        IF X% = 299 THEN MAPX% = MAPX% + 1: X% = 1: GOSUB NEWROOM
-    END IF
-    SELECT CASE GET.ME%
-        CASE 1
-            IF X% > 127 AND X% < 171 AND Y% > 67 AND Y% < 111 THEN GOSUB REACT
-            IF ABORT% THEN EXIT SUB
-        CASE 2
-            IF (INFO.KEY% > 0) AND (X% = 108 OR X% = 210 OR Y% = 28 OR Y% = 140) THEN
-                FOR A = 150 TO 0 STEP -1
-                    IF A MOD 2 THEN SOUND (A * 20) + 50, .0227275 ELSE SOUND (A * (20 + 10)) + 50, .0227275
-                NEXT A
-                INFO.KEY% = INFO.KEY% - 1
-                GET.ME% = 0
-                GO% = 1
-                LINE (129, 69)-(189, 139), 0, BF
-                CHART&(MAPX%, MAPY%) = CHART&(MAPX%, MAPY%) AND 15
-            END IF
-        CASE 3
-            IF (INFO.TRAP% AND 16) = 0 AND X% > 98 AND X% < 200 AND Y% > 38 AND Y% < 150 THEN
-                INFO.TRAP% = INFO.TRAP% + 16
-            END IF
-            IF (INFO.TRAP% AND 16) = 16 THEN
-                IF (X% < 99 AND (INFO.TRAP% AND 8) = 0) OR (X% > 199 AND (INFO.TRAP% AND 4) = 0) OR (Y% < 39 AND (INFO.TRAP% AND 2) = 0) OR (Y% > 149 AND (INFO.TRAP% AND 1) = 0) THEN
-                    LINE (119, 59)-(199, 149), 5, BF
-                    CHART&(MAPX%, MAPY%) = (CHART&(MAPX%, MAPY%) AND 15) + 131072
-                    GET.ME% = 0
-                END IF
-            END IF
-    END SELECT
-    _DELAY 0.002
-    GOTO PLAYLOOP
-    REACT:
-    GO% = 0
-    SELECT CASE ITEM&
-        CASE 16: INFO.KEY% = INFO.KEY% + 1: GO% = 1: PLAY "MBMLT255L64o5bababa"
-        CASE 32: INFO.COIN% = INFO.COIN% + 1: GO% = 1: INFO.SCORE% = INFO.SCORE% + 10: PLAY "MBT200L64O3DEFGABAGFEDC"
-        CASE 64: INFO.HEALTH% = INFO.HEALTH% + 1: GO% = 1: PLAY "MBMLT255L32o1co4do1co4do1co4do1co4do1co4do1co4d"
-        CASE 128: INFO.SHIELD% = INFO.SHIELD% + 1: GO% = 1: PLAY "MBMLT255L64o2cdefgab"
-        CASE 256: INFO.TIME% = INFO.TIME% + 1: GO% = 1: PLAY "MBMLT255L64o2cdefgab"
-        CASE 1024: INFO.GUN% = INFO.GUN% + 5: GO% = 1: PLAY "MBMLT255L64o2cdefgab"
-        CASE 8192: INFO.DISK% = INFO.DISK% + 1: PLAY "MBMLT255L64o2cdefgab"
-            IF INFO.DISK% = 4 THEN
-                LEVEL% = LEVEL% + 1: NEW.LEVEL LEVEL%: IF ABORT% = 1 THEN RETURN
-                ITEM& = 0: MAPX% = CHART&(0, 6): MAPY% = CHART&(0, 7)
-                X% = 149: Y% = 89: GOSUB NEWROOM: NOTUP% = 0
-                NOTDOWN% = 0: NOTLEFT% = 0: NOTRIGHT% = 0: INFO.DISK% = 0
-            ELSE
-                GO% = 1
-            END IF
-        CASE 16384:
-            NEW.LEVEL LEVEL%: ITEM& = 0: MAPX% = CHART&(0, 6): MAPY% = CHART&(0, 7)
-            X% = 149: Y% = 89: GOSUB NEWROOM: NOTUP% = 0: NOTDOWN% = 0: NOTLEFT% = 0: NOTRIGHT% = 0
-        CASE 32768
-            IF KEYB% = 57 THEN
-                FOR A = 0 TO 150 STEP 1
-                    IF A MOD 2 THEN SOUND (A * 20) + 50, .0227275 ELSE SOUND (A * (20 + 10)) + 50, .0227275
-                NEXT A
-                MAPX% = CHART&(0, 4)
-                MAPY% = CHART&(0, 5)
-                GO% = 2
-                GOSUB NEWROOM
-                GOSUB LETGO
-            END IF
-        CASE 65536
-            IF GO% = 0 AND KEYB% = 57 THEN
-                FOR A = 0 TO 150 STEP 1
-                    IF A MOD 2 THEN SOUND (A * 20) + 50, .0227275 ELSE SOUND (A * (20 + 10)) + 50, .0227275
-                NEXT A
-                MAPX% = CHART&(0, 2)
-                MAPY% = CHART&(0, 3)
-                GOSUB NEWROOM
-                GOSUB LETGO
-            END IF
-    END SELECT
-    IF GO% = 1 THEN
-        CHART&(MAPX%, MAPY%) = CHART&(MAPX%, MAPY%) AND 15
-        LINE (149, 89)-(169, 109), 0, BF
-        ITEM& = 0
-    END IF
-    GET.ME& = 0
-    RETURN
-    NEWROOM:
-    IF BEEN.HERE% = 1 THEN
-        NOW.SHOOTING% = 0
-        COUNTER% = 0
-        READY.TO.PLACE = 0
-    END IF
-    BADX% = 149
-    BADY% = 89
-    OUCH.COUNT% = 300
-    BAD.HEALTH% = 3
-    IF (CHART&(MAPX%, MAPY%) AND 1) = 0 THEN LINE (119, 0)-(199, 58), 1, BF
-    IF (CHART&(MAPX%, MAPY%) AND 2) = 0 THEN LINE (0, 59)-(118, 149), 1, BF
-    IF (CHART&(MAPX%, MAPY%) AND 4) = 0 THEN LINE (200, 59)-(319, 149), 1, BF
-    IF (CHART&(MAPX%, MAPY%) AND 8) = 0 THEN LINE (119, 150)-(199, 199), 1, BF
-    IF (CHART&(MAPX%, MAPY%) AND 1) THEN LINE (119, 0)-(199, 149), 0, BF
-    IF (CHART&(MAPX%, MAPY%) AND 2) THEN LINE (0, 59)-(199, 149), 0, BF
-    IF (CHART&(MAPX%, MAPY%) AND 4) THEN LINE (119, 59)-(319, 149), 0, BF
-    IF (CHART&(MAPX%, MAPY%) AND 8) THEN LINE (119, 59)-(199, 199), 0, BF
-    ITEM& = CHART&(MAPX%, MAPY%) - (CHART&(MAPX%, MAPY%) AND 15)
-    SELECT CASE DIRECTION%
-        CASE 1
-            PUT (X%, Y%), IMAGE&(391), PSET
-        CASE 2
-            PUT (X%, Y% - 1), IMAGE&(131), PSET
-        CASE 3
-            PUT (X%, Y%), IMAGE&(261), PSET
-        CASE 4
-            PUT (X% - 1, Y%), IMAGE&(0), PSET
-    END SELECT
-    GET.ME% = 0
-    SELECT CASE ITEM&
-        CASE 16: PUT (149, 89), IMAGE&(781), PSET: GET.ME% = 1
-        CASE 32: PUT (149, 89), IMAGE&(651), PSET: GET.ME% = 1
-        CASE 64: PUT (149, 89), IMAGE&(1041), PSET: GET.ME% = 1
-        CASE 128: PUT (149, 89), IMAGE&(911), PSET: GET.ME% = 1
-        CASE 256: PUT (149, 89), IMAGE&(1171), PSET: GET.ME% = 1
-        CASE 512: PUT (149, 89), IMAGE&(521), PSET: GET.ME% = 0
-        CASE 1024: PUT (149, 89), IMAGE&(1431), PSET: GET.ME% = 1
-        CASE 2048
-            GET.ME% = 3
-            LINE (149, 89)-(169, 109), 3, BF
-            IF BEEN.HERE% = 1 THEN
-                SELECT CASE DIRECTION%
-                    CASE 1
-                        INFO.TRAP% = 1
-                    CASE 2
-                        INFO.TRAP% = 2
-                    CASE 3
-                        INFO.TRAP% = 4
-                    CASE 4
-                        INFO.TRAP% = 8
-                END SELECT
-            END IF
-        CASE 4096: LINE (129, 69)-(189, 139), 3, BF: GET.ME% = 2
-        CASE 8192: PUT (149, 89), IMAGE&(1561), PSET: GET.ME% = 1
-        CASE 16384: PUT (149, 89), IMAGE&(1821), PSET: GET.ME% = 1
-        CASE 32768, 65536: PUT (149, 89), IMAGE&(1691), PSET: GET.ME% = 1
-        CASE 131072: LINE (119, 59)-(199, 149), 5, BF
-    END SELECT
-    BEEN.HERE% = 1
-    RETURN
-    MONSTER:
-    COUNTER% = 0
-    GO% = 0
-    IF BAD.HEALTH% = 0 THEN
-        GO% = 1
-        ITEM& = 0
-        CHART&(MAPX%, MAPY%) = (CHART&(MAPX%, MAPY%) AND 15)
-        LINE (BADX%, BADY%)-(BADX% + 20, BADY% + 20), 0, BF
-        RETURN
-    END IF
-    BADUP% = POINT(BADX%, BADY% - 1) + POINT(BADX% + 20, BADY% - 1)
-    BADDOWN% = POINT(BADX%, BADY% + 21) + POINT(BADX% + 20, BADY% + 21)
-    BADLEFT% = POINT(BADX% - 1, BADY%) + POINT(BADX% - 1, BADY% + 20)
-    BADRIGHT% = POINT(BADX% + 21, BADY%) + POINT(BADX% + 21, BADY% + 20)
-    IF BADX% = X% - 21 AND BADY% > Y% - 21 AND BADY% < Y% + 21 THEN OUCH% = 1
-    IF BADX% = X% + 21 AND BADY% > Y% - 21 AND BADY% < Y% + 21 THEN OUCH% = 1
-    IF BADY% = Y% - 21 AND BADX% > X% - 21 AND BADX% < X% + 21 THEN OUCH% = 1
-    IF BADY% = Y% + 21 AND BADX% > X% - 21 AND BADX% < X% + 21 THEN OUCH% = 1
-    IF OUCH% = 1 AND OUCH.COUNT% = 300 THEN
-        OUCH.COUNT% = 0
-        IF INFO.SHIELD% > 0 THEN
-            INFO.SHIELD% = INFO.SHIELD% - 1
-            PLAY "MBP1"
-        ELSE
-            INFO.HEALTH% = INFO.HEALTH% - 1
-            FOR A = 200 TO 0 STEP -1
-                SOUND (A * 40) + 50, .0227275
-            NEXT A
-        END IF
-    END IF
-    OUCH% = 0
-    IF BADX% < X% AND BADRIGHT% = 0 THEN
-        BADX% = BADX% + 1
-        GO% = 1
-        LINE (BADX% - 1, BADY%)-(BADX% - 1, BADY% + 20), 0
-    END IF
-    IF BADX% > X% AND BADLEFT% = 0 THEN
-        BADX% = BADX% - 1
-        GO% = 1
-        LINE (BADX% + 21, BADY%)-(BADX% + 21, BADY% + 20), 0
-    END IF
-    IF BADY% < Y% AND BADDOWN% = 0 THEN
-        BADY% = BADY% + 1
-        GO% = 1
-        LINE (BADX%, BADY% - 1)-(BADX% + 20, BADY% - 1), 0
-    END IF
-    IF BADY% > Y% AND BADUP% = 0 THEN
-        BADY% = BADY% - 1
-        GO% = 1
-        LINE (BADX%, BADY% + 21)-(BADX% + 20, BADY% + 21), 0
-    END IF
-    IF GO% = 1 THEN PUT (BADX%, BADY%), IMAGE&(521), PSET
-    RETURN
-    SHOOT:
-    IF NOW.SHOOTING% = 0 THEN
-        INFO.GUN% = INFO.GUN% - 1
-        NOW.SHOOTING% = 1
-        SHOTX% = X%
-        SHOTY% = Y%
-        SHOOT.VECTOR% = DIRECTION%
-        SHOOT.COUNTER% = 0
-        DISTANCE% = 0
-    END IF
-    SELECT CASE SHOOT.VECTOR%
-        CASE 1
-            SHOTY% = SHOTY% - 1
-            WHATS.AHEAD% = POINT(SHOTX% + 5, SHOTY% - 10) + POINT(SHOTX% + 15, SHOTY% - 10)
-            IF DISTANCE% = 1 THEN LINE (SHOTX% + 5, SHOTY% - 9)-(SHOTX% + 15, SHOTY% + 1), 0, B
-            IF WHATS.AHEAD% = 0 THEN
-                LINE (SHOTX% + 5, SHOTY% - 10)-(SHOTX% + 15, SHOTY%), 8, B
-            ELSE
-                NOW.SHOOTING% = 0
-                IF ITEM& = 512 AND BADY% - 1 < SHOTY% AND BADY% + 71 > SHOTY% AND BADX% - 31 < SHOTX% AND BADX% + 31 > SHOTX% THEN
-                    BAD.HEALTH% = BAD.HEALTH% - 1
-                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
-                ELSE
-                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
-                END IF
-            END IF
-        CASE 2
-            SHOTY% = SHOTY% + 1
-            WHATS.AHEAD% = POINT(SHOTX% + 5, SHOTY% + 30) + POINT(SHOTX% + 15, SHOTY% + 30)
-            IF DISTANCE% = 1 THEN LINE (SHOTX% + 5, SHOTY% + 19)-(SHOTX% + 15, SHOTY% + 29), 0, B
-            IF WHATS.AHEAD% = 0 THEN
-                LINE (SHOTX% + 5, SHOTY% + 20)-(SHOTX% + 15, SHOTY% + 30), 8, B
-            ELSE
-                NOW.SHOOTING% = 0
-                IF ITEM& = 512 AND BADY% - 41 < SHOTY% AND BADY% + 21 > SHOTY% AND BADX% - 31 < SHOTX% AND BADX% + 21 > SHOTX% THEN
-                    BAD.HEALTH% = BAD.HEALTH% - 1
-                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
-                ELSE
-                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
-                END IF
-            END IF
-        CASE 3
-            SHOTX% = SHOTX% - 1
-            WHATS.AHEAD% = POINT(SHOTX% - 11, SHOTY% + 5) + POINT(SHOTX% - 11, SHOTY% + 15)
-            IF DISTANCE% = 1 THEN LINE (SHOTX% - 10, SHOTY% + 5)-(SHOTX%, SHOTY% + 15), 0, B
-            IF WHATS.AHEAD% = 0 THEN
-                LINE (SHOTX% - 11, SHOTY% + 5)-(SHOTX% - 1, SHOTY% + 15), 8, B
-            ELSE
-                NOW.SHOOTING% = 0
-                IF ITEM& = 512 AND BADY% - 21 < SHOTY% AND BADY% + 31 > SHOTY% AND BADX% - 11 < SHOTX% AND BADX% + 32 > SHOTX% THEN
-                    BAD.HEALTH% = BAD.HEALTH% - 1
-                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
-                ELSE
-                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
-                END IF
-            END IF
-        CASE 4
-            SHOTX% = SHOTX% + 1
-            WHATS.AHEAD% = POINT(SHOTX% + 31, SHOTY% + 5) + POINT(SHOTX% + 31, SHOTY% + 15)
-            IF DISTANCE% = 1 THEN LINE (SHOTX% + 20, SHOTY% + 5)-(SHOTX% + 30, SHOTY% + 15), 0, B
-            IF WHATS.AHEAD% = 0 THEN
-                LINE (SHOTX% + 21, SHOTY% + 5)-(SHOTX% + 31, SHOTY% + 15), 8, B
-            ELSE
-                NOW.SHOOTING% = 0
-                IF ITEM& = 512 AND BADY% - 31 < SHOTY% AND BADY% + 31 > SHOTY% AND BADX% - 41 < SHOTX% AND BADX% + 32 > SHOTX% THEN
-                    BAD.HEALTH% = BAD.HEALTH% - 1
-                    PLAY "MBMLT255L64O6BAGFO5BAGFO4BAGFO3BAGFO2BAGFO1BAGF"
-                ELSE
-                    PLAY "MBT100L64O1AO2AO3AO4AO5AO6A"
-                END IF
-            END IF
-    END SELECT
-    RETURN
-    LETGO:
-    DO
-        DO: LOOP UNTIL INKEY$ = ""
-        LOOK% = INP(96)
-    LOOP UNTIL LOOK% <> KEYB% AND LOOK% <> 224
-    RETURN
-END SUB
+sub start.new.game
+    if mapx% = 0 then
+        level% = 0
+        new.level level%
+        if abort% then exit sub
+        mapx% = chart&(0, 6)
+        mapy% = chart&(0, 7)
+        x% = 149
+        y% = 89
+        direction% = 1
+        info.health% = 5
+        game.open% = 1
+    end if
+    line (0, 0)-(319, 199), 1, bf
+    gosub newroom
+    do: do: loop until inkey$ = "": loop until inp(96) <> 28 and inp(96) <> 1
+    playloop:
+    do: loop until inkey$ = ""
+    keyb% = inp(96)
+    if item& = 512 then
+        if ouch.count% < 300 then ouch.count% = ouch.count% + 1
+        counter% = counter% + 1
+        if counter% = 3 or now.shooting% = 1 then gosub monster: if info.health% = 0 then end.game: exit sub
+    end if
+    if shoot.counter% < 200 then shoot.counter% = shoot.counter% + 1
+    if now.shooting% = 1 then distance% = 1: gosub shoot
+    select case keyb%
+        case 1: exit sub
+        case 29
+            if shoot.counter% = 200 and now.shooting% = 0 and info.gun% > 0 then gosub shoot
+        case 72
+            if notup% = 0 then
+                y% = y% - 1
+                put (x%, y%), image&(391), pset
+                go% = 1
+                direction% = 1
+            end if
+        case 80
+            if notdown% = 0 then
+                y% = y% + 1
+                put (x%, y% - 1), image&(131), pset
+                go% = 1
+                direction% = 2
+            end if
+        case 75
+            if notleft% = 0 then
+                x% = x% - 1
+                put (x%, y%), image&(261), pset
+                go% = 1
+                direction% = 3
+            end if
+        case 77
+            if notright% = 0 then
+                x% = x% + 1
+                put (x% - 1, y%), image&(0), pset
+                go% = 1
+                direction% = 4
+            end if
+    end select
+    notup% = point(x%, y% - 1) + point(x% + 20, y% - 1)
+    notdown% = point(x%, y% + 21) + point(x% + 20, y% + 21)
+    notleft% = point(x% - 1, y%) + point(x% - 1, y% + 20)
+    notright% = point(x% + 21, y%) + point(x% + 21, y% + 20)
+    if go% = 1 then
+        if y% = 0 then mapy% = mapy% - 1: y% = 178: gosub newroom
+        if y% = 179 then mapy% = mapy% + 1: y% = 1: gosub newroom
+        if x% = 0 then mapx% = mapx% - 1: x% = 298: gosub newroom
+        if x% = 299 then mapx% = mapx% + 1: x% = 1: gosub newroom
+    end if
+    select case get.me%
+        case 1
+            if x% > 127 and x% < 171 and y% > 67 and y% < 111 then gosub react
+            if abort% then exit sub
+        case 2
+            if (info.key% > 0) and (x% = 108 or x% = 210 or y% = 28 or y% = 140) then
+                for a = 150 to 0 step -1
+                    if a mod 2 then sound (a * 20) + 50, .0227275 else sound (a * (20 + 10)) + 50, .0227275
+                next a
+                info.key% = info.key% - 1
+                get.me% = 0
+                go% = 1
+                line (129, 69)-(189, 139), 0, bf
+                chart&(mapx%, mapy%) = chart&(mapx%, mapy%) and 15
+            end if
+        case 3
+            if (info.trap% and 16) = 0 and x% > 98 and x% < 200 and y% > 38 and y% < 150 then
+                info.trap% = info.trap% + 16
+            end if
+            if (info.trap% and 16) = 16 then
+                if (x% < 99 and (info.trap% and 8) = 0) or (x% > 199 and (info.trap% and 4) = 0) or (y% < 39 and (info.trap% and 2) = 0) or (y% > 149 and (info.trap% and 1) = 0) then
+                    line (119, 59)-(199, 149), 5, bf
+                    chart&(mapx%, mapy%) = (chart&(mapx%, mapy%) and 15) + 131072
+                    get.me% = 0
+                end if
+            end if
+    end select
+    _delay 0.002
+    goto playloop
+    react:
+    go% = 0
+    select case item&
+        case 16: info.key% = info.key% + 1: go% = 1: play "mbmlt255l64o5bababa"
+        case 32: info.coin% = info.coin% + 1: go% = 1: info.score% = info.score% + 10: play "mbt200l64o3defgabagfedc"
+        case 64: info.health% = info.health% + 1: go% = 1: play "mbmlt255l32o1co4do1co4do1co4do1co4do1co4do1co4d"
+        case 128: info.shield% = info.shield% + 1: go% = 1: play "mbmlt255l64o2cdefgab"
+        case 256: info.time% = info.time% + 1: go% = 1: play "mbmlt255l64o2cdefgab"
+        case 1024: info.gun% = info.gun% + 5: go% = 1: play "mbmlt255l64o2cdefgab"
+        case 8192: info.disk% = info.disk% + 1: play "mbmlt255l64o2cdefgab"
+            if info.disk% = 4 then
+                level% = level% + 1: new.level level%: if abort% = 1 then return
+                item& = 0: mapx% = chart&(0, 6): mapy% = chart&(0, 7)
+                x% = 149: y% = 89: gosub newroom: notup% = 0
+                notdown% = 0: notleft% = 0: notright% = 0: info.disk% = 0
+            else
+                go% = 1
+            end if
+        case 16384:
+            new.level level%: item& = 0: mapx% = chart&(0, 6): mapy% = chart&(0, 7)
+            x% = 149: y% = 89: gosub newroom: notup% = 0: notdown% = 0: notleft% = 0: notright% = 0
+        case 32768
+            if keyb% = 57 then
+                for a = 0 to 150 step 1
+                    if a mod 2 then sound (a * 20) + 50, .0227275 else sound (a * (20 + 10)) + 50, .0227275
+                next a
+                mapx% = chart&(0, 4)
+                mapy% = chart&(0, 5)
+                go% = 2
+                gosub newroom
+                gosub letgo
+            end if
+        case 65536
+            if go% = 0 and keyb% = 57 then
+                for a = 0 to 150 step 1
+                    if a mod 2 then sound (a * 20) + 50, .0227275 else sound (a * (20 + 10)) + 50, .0227275
+                next a
+                mapx% = chart&(0, 2)
+                mapy% = chart&(0, 3)
+                gosub newroom
+                gosub letgo
+            end if
+    end select
+    if go% = 1 then
+        chart&(mapx%, mapy%) = chart&(mapx%, mapy%) and 15
+        line (149, 89)-(169, 109), 0, bf
+        item& = 0
+    end if
+    get.me& = 0
+    return
+    newroom:
+    if been.here% = 1 then
+        now.shooting% = 0
+        counter% = 0
+        ready.to.place = 0
+    end if
+    badx% = 149
+    bady% = 89
+    ouch.count% = 300
+    bad.health% = 3
+    if (chart&(mapx%, mapy%) and 1) = 0 then
+        line (119, 0)-(199, 58), 1, bf
+    else
+        line (119, 0)-(199, 149), 0, bf
+    end if
+    if (chart&(mapx%, mapy%) and 2) = 0 then
+        line (0, 59)-(118, 149), 1, bf
+    else
+        line (0, 59)-(199, 149), 0, bf
+    end if
+    if (chart&(mapx%, mapy%) and 4) = 0 then
+        line (200, 59)-(319, 149), 1, bf
+    else
+        line (119, 59)-(319, 149), 0, bf
+    end if
+    if (chart&(mapx%, mapy%) and 8) = 0 then
+        line (119, 150)-(199, 199), 1, bf
+    else
+        line (119, 59)-(199, 199), 0, bf
+    end if
+    item& = chart&(mapx%, mapy%) - (chart&(mapx%, mapy%) and 15)
+    select case direction%
+        case 1
+            put (x%, y%), image&(391), pset
+        case 2
+            put (x%, y% - 1), image&(131), pset
+        case 3
+            put (x%, y%), image&(261), pset
+        case 4
+            put (x% - 1, y%), image&(0), pset
+    end select
+    get.me% = 0
+    select case item&
+        case 16: put (149, 89), image&(781), pset: get.me% = 1
+        case 32: put (149, 89), image&(651), pset: get.me% = 1
+        case 64: put (149, 89), image&(1041), pset: get.me% = 1
+        case 128: put (149, 89), image&(911), pset: get.me% = 1
+        case 256: put (149, 89), image&(1171), pset: get.me% = 1
+        case 512: put (149, 89), image&(521), pset: get.me% = 0
+        case 1024: put (149, 89), image&(1431), pset: get.me% = 1
+        case 2048
+            get.me% = 3
+            line (149, 89)-(169, 109), 3, bf
+            if been.here% = 1 then
+                select case direction%
+                    case 1
+                        info.trap% = 1
+                    case 2
+                        info.trap% = 2
+                    case 3
+                        info.trap% = 4
+                    case 4
+                        info.trap% = 8
+                end select
+            end if
+        case 4096: line (129, 69)-(189, 139), 3, bf: get.me% = 2
+        case 8192: put (149, 89), image&(1561), pset: get.me% = 1
+        case 16384: put (149, 89), image&(1821), pset: get.me% = 1
+        case 32768, 65536: put (149, 89), image&(1691), pset: get.me% = 1
+        case 131072: line (119, 59)-(199, 149), 5, bf
+    end select
+    been.here% = 1
+    return
+    monster:
+    counter% = 0
+    go% = 0
+    if bad.health% = 0 then
+        go% = 1
+        item& = 0
+        chart&(mapx%, mapy%) = (chart&(mapx%, mapy%) and 15)
+        line (badx%, bady%)-(badx% + 20, bady% + 20), 0, bf
+        return
+    end if
+    badup% = point(badx%, bady% - 1) + point(badx% + 20, bady% - 1)
+    baddown% = point(badx%, bady% + 21) + point(badx% + 20, bady% + 21)
+    badleft% = point(badx% - 1, bady%) + point(badx% - 1, bady% + 20)
+    badright% = point(badx% + 21, bady%) + point(badx% + 21, bady% + 20)
+    if badx% = x% - 21 and bady% > y% - 21 and bady% < y% + 21 then ouch% = 1
+    if badx% = x% + 21 and bady% > y% - 21 and bady% < y% + 21 then ouch% = 1
+    if bady% = y% - 21 and badx% > x% - 21 and badx% < x% + 21 then ouch% = 1
+    if bady% = y% + 21 and badx% > x% - 21 and badx% < x% + 21 then ouch% = 1
+    if ouch% = 1 and ouch.count% = 300 then
+        ouch.count% = 0
+        if info.shield% > 0 then
+            info.shield% = info.shield% - 1
+            play "mbp1"
+        else
+            info.health% = info.health% - 1
+            for a = 200 to 0 step -1
+                sound (a * 40) + 50, .0227275
+            next a
+        end if
+    end if
+    ouch% = 0
+    if badx% < x% and badright% = 0 then
+        badx% = badx% + 1
+        go% = 1
+        line (badx% - 1, bady%)-(badx% - 1, bady% + 20), 0
+    end if
+    if badx% > x% and badleft% = 0 then
+        badx% = badx% - 1
+        go% = 1
+        line (badx% + 21, bady%)-(badx% + 21, bady% + 20), 0
+    end if
+    if bady% < y% and baddown% = 0 then
+        bady% = bady% + 1
+        go% = 1
+        line (badx%, bady% - 1)-(badx% + 20, bady% - 1), 0
+    end if
+    if bady% > y% and badup% = 0 then
+        bady% = bady% - 1
+        go% = 1
+        line (badx%, bady% + 21)-(badx% + 20, bady% + 21), 0
+    end if
+    if go% = 1 then put (badx%, bady%), image&(521), pset
+    return
+    shoot:
+    if now.shooting% = 0 then
+        info.gun% = info.gun% - 1
+        now.shooting% = 1
+        shotx% = x%
+        shoty% = y%
+        shoot.vector% = direction%
+        shoot.counter% = 0
+        distance% = 0
+    end if
+    select case shoot.vector%
+        case 1
+            shoty% = shoty% - 1
+            whats.ahead% = point(shotx% + 5, shoty% - 10) + point(shotx% + 15, shoty% - 10)
+            if distance% = 1 then line (shotx% + 5, shoty% - 9)-(shotx% + 15, shoty% + 1), 0, b
+            if whats.ahead% = 0 then
+                line (shotx% + 5, shoty% - 10)-(shotx% + 15, shoty%), 8, b
+            else
+                now.shooting% = 0
+                if item& = 512 and bady% - 1 < shoty% and bady% + 71 > shoty% and badx% - 31 < shotx% and badx% + 31 > shotx% then
+                    bad.health% = bad.health% - 1
+                    play "mbmlt255l64o6bagfo5bagfo4bagfo3bagfo2bagfo1bagf"
+                else
+                    play "mbt100l64o1ao2ao3ao4ao5ao6a"
+                end if
+            end if
+        case 2
+            shoty% = shoty% + 1
+            whats.ahead% = point(shotx% + 5, shoty% + 30) + point(shotx% + 15, shoty% + 30)
+            if distance% = 1 then line (shotx% + 5, shoty% + 19)-(shotx% + 15, shoty% + 29), 0, b
+            if whats.ahead% = 0 then
+                line (shotx% + 5, shoty% + 20)-(shotx% + 15, shoty% + 30), 8, b
+            else
+                now.shooting% = 0
+                if item& = 512 and bady% - 41 < shoty% and bady% + 21 > shoty% and badx% - 31 < shotx% and badx% + 21 > shotx% then
+                    bad.health% = bad.health% - 1
+                    play "mbmlt255l64o6bagfo5bagfo4bagfo3bagfo2bagfo1bagf"
+                else
+                    play "mbt100l64o1ao2ao3ao4ao5ao6a"
+                end if
+            end if
+        case 3
+            shotx% = shotx% - 1
+            whats.ahead% = point(shotx% - 11, shoty% + 5) + point(shotx% - 11, shoty% + 15)
+            if distance% = 1 then line (shotx% - 10, shoty% + 5)-(shotx%, shoty% + 15), 0, b
+            if whats.ahead% = 0 then
+                line (shotx% - 11, shoty% + 5)-(shotx% - 1, shoty% + 15), 8, b
+            else
+                now.shooting% = 0
+                if item& = 512 and bady% - 21 < shoty% and bady% + 31 > shoty% and badx% - 11 < shotx% and badx% + 32 > shotx% then
+                    bad.health% = bad.health% - 1
+                    play "mbmlt255l64o6bagfo5bagfo4bagfo3bagfo2bagfo1bagf"
+                else
+                    play "mbt100l64o1ao2ao3ao4ao5ao6a"
+                end if
+            end if
+        case 4
+            shotx% = shotx% + 1
+            whats.ahead% = point(shotx% + 31, shoty% + 5) + point(shotx% + 31, shoty% + 15)
+            if distance% = 1 then line (shotx% + 20, shoty% + 5)-(shotx% + 30, shoty% + 15), 0, b
+            if whats.ahead% = 0 then
+                line (shotx% + 21, shoty% + 5)-(shotx% + 31, shoty% + 15), 8, b
+            else
+                now.shooting% = 0
+                if item& = 512 and bady% - 31 < shoty% and bady% + 31 > shoty% and badx% - 41 < shotx% and badx% + 32 > shotx% then
+                    bad.health% = bad.health% - 1
+                    play "mbmlt255l64o6bagfo5bagfo4bagfo3bagfo2bagfo1bagf"
+                else
+                    play "mbt100l64o1ao2ao3ao4ao5ao6a"
+                end if
+            end if
+    end select
+    return
+    letgo:
+    do
+        do: loop until inkey$ = ""
+        look% = inp(96)
+    loop until look% <> keyb% and look% <> 224
+    return
+end sub
 
