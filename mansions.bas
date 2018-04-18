@@ -1,7 +1,7 @@
 declare sub end.game ()
 declare function initialize ()
 declare sub load.a.game ()
-declare function loadfile (filename$, lenth&, segment!, offset!, flag%)
+declare function loadfile (filename$, length&, segment!, offset!, flag%)
 declare sub menu ()
 declare sub new.level (level%)
 declare sub save.this.game ()
@@ -54,7 +54,6 @@ function initialize
     abort% = 0
     do: loop until inkey$ = ""
     cls
-    print "loading..."
     initialize% = loadfile("images.0", 12008, varseg(image&(0)), 0, 3)
     if initialize% = 1 then exit function
     initialize% = loadfile("pal.0", 212, varseg(colors&(0)), 0, 3)
@@ -144,7 +143,7 @@ function loadfile% (filename$, length&, segment!, offset!, flag%)
         if (flag% and 2) then
             screen 0
             width 80, 25
-            print "file " + filename$ + " has wrong lenth!"
+            print "file " + filename$ + " has wrong length!"
         end if
         loadfile% = 1
         exit function
